@@ -5,6 +5,7 @@ import NotFound from "./pages/NotFound";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import UserProfile from "./pages/UserProfile";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="*" element={<NotFound />} /> {/* Trang 404 */}
+            <Route path="/profile" element={<UserProfile />} />
           </Routes>
         </main>
         <Footer />
