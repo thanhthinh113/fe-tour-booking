@@ -7,6 +7,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import UserProfile from "./pages/UserProfile";
 import TourDetail from "./pages/TourDetail";
+import AboutUs from "./pages/AboutUs";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             <Route path="*" element={<NotFound />} /> {/* Trang 404 */}
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/tourdetail/:id" element={<TourDetail />} />
+            <Route path="/aboutus" element={<AboutUs />} />
           </Routes>
         </main>
         <Footer />
