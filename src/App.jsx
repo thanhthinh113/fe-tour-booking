@@ -11,6 +11,7 @@ import AboutUs from "./pages/AboutUs";
 import BookingForm from "./pages/BookingForm";
 import PaymentForm from "./pages/PaymentForm";
 import ContactUs from "./pages/ContactUs";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/dangky" element={<BookingForm />} />
             <Route path="/payment" element={<PaymentForm />} />
             <Route path="/contact" element={<ContactUs />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
           </Routes>
         </main>
         <Footer />
