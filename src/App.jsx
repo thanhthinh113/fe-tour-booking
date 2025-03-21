@@ -8,6 +8,7 @@ import Footer from "./components/Footer";
 import UserProfile from "./pages/UserProfile";
 import TourDetail from "./pages/TourDetail";
 import AboutUs from "./pages/AboutUs";
+import BookingForm from "./pages/BookingForm";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/tourdetail/:id" element={<TourDetail />} />
             <Route path="/aboutus" element={<AboutUs />} />
+            <Route path="/dangky" element={<BookingForm />} />
           </Routes>
         </main>
         <Footer />
