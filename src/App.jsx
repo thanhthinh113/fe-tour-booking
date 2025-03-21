@@ -12,6 +12,7 @@ import BookingForm from "./pages/BookingForm";
 import PaymentForm from "./pages/PaymentForm";
 import ContactUs from "./pages/ContactUs";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/payment" element={<PaymentForm />} />
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/termofservice" element={<TermsOfService />} />
           </Routes>
         </main>
         <Footer />
