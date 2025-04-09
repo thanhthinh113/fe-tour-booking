@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = "http://localhost:8080/api"; // địa chỉ khi chạy API-GETWAY trong dev
 
 export const getAllTours = async () => {
   const response = await fetch(`${API_BASE_URL}/tours`);
