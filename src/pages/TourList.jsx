@@ -7,9 +7,10 @@ function TourList() {
 
   // Gọi API khi component mount
   useEffect(() => {
+    console.log("Load tour");
     const fetchTours = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/tours`);
+        const response = await fetch(`http://localhost:8080/tours`);
         const data = await response.json();
         setTours(data);
       } catch (error) {
@@ -25,7 +26,7 @@ function TourList() {
       <h2 className="text-2xl font-bold mb-4">Danh sách tour</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {tours.map((tour) => (
-          <div key={tour.id} className="rounded-lg shadow-lg p-4 bg-white">
+          <div key={tour.id_tour} className="rounded-lg shadow-lg p-4 bg-white">
             <img
               src={tour.image}
               alt={tour.name}
