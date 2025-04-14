@@ -154,7 +154,7 @@ function BookingForm() {
     // Gọi API để lấy thông tin tour theo ID
     const fetchTour = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/tours/${tourId}`);
+        const response = await fetch(`http://localhost:8080/tours`);
         const data = await response.json();
         setTour(data);
       } catch (error) {
