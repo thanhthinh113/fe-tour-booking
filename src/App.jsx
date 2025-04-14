@@ -14,6 +14,7 @@ import ContactUs from "./pages/ContactUs";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
 
 function App() {
   return (
@@ -22,8 +23,9 @@ function App() {
         <Header />
         <main className="flex-1">
           <Routes>
-          <Route path="/" element={<Login />} />
-            {/* <Route path="/" element={<Home />} /> */}
+          {/* <Route path="/" element={<SignUp />} /> */}
+          {/* <Route path="/" element={<Login />} /> */}
+            <Route path="/" element={<Home />} />
             <Route path="*" element={<NotFound />} /> {/* Trang 404 */}
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/tourdetail/:id" element={<TourDetail />} />
