@@ -24,8 +24,8 @@ function App() {
         <main className="flex-1">
           <Routes>
           {/* <Route path="/" element={<SignUp />} /> */}
-          {/* <Route path="/" element={<Login />} /> */}
-            <Route path="/" element={<Home />} />
+          <Route path="/" element={<Login />} />
+            {/* <Route path="/" element={<Home />} /> */}
             <Route path="*" element={<NotFound />} /> {/* Trang 404 */}
             <Route path="/profile" element={<UserProfile />} />
             <Route path="/tourdetail/:id" element={<TourDetail />} />

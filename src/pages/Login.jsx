@@ -16,9 +16,13 @@ const Login = () => {
     }
   };
 
-  const handleSignUpRedirect = () => {
-    navigate('/signup');
+  const handleGoogleLogin = () => {
+    window.location.href = 'http://localhost:8080/customer/auth/login/google';
   };
+
+  function handleSignUpRedirect() {
+    navigate('/signup');
+  }
 
   return (
     <div className="bg-gray-100 flex items-center justify-center min-h-screen">
@@ -56,6 +60,12 @@ const Login = () => {
             Login
           </button>
         </form>
+        <button
+          onClick={handleGoogleLogin}
+          className="w-full mt-4 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-300"
+        >
+          Login with Google
+        </button>
         <p className="text-center text-gray-600 mt-4">
           Don't have an account?{' '}
           <span
