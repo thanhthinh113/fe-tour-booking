@@ -4,30 +4,53 @@ import { useNavigate } from 'react-router-dom';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email && password) {
-      alert(`Login successful! Email: ${email}`);
-      // Thêm logic gửi dữ liệu đến server nếu cần
-    } else {
-      alert('Please fill in all fields.');
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:8080/customer/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(errorData || 'Login failed. Please try again.');
+      }
+
+      const data = await response.json();
+      // Lưu token vào localStorage
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+
+      alert('Login successful!');
+      navigate('/dashboard'); // Chuyển hướng sau khi đăng nhập thành công
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.');
     }
   };
 
   const handleGoogleLogin = () => {
+    // Chuyển hướng đến endpoint đăng nhập Google
     window.location.href = 'http://localhost:8080/customer/auth/login/google';
   };
 
-  function handleSignUpRedirect() {
+  const handleSignUpRedirect = () => {
     navigate('/signup');
-  }
+  };
 
   return (
     <div className="bg-gray-100 flex items-center justify-center min-h-screen">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Travel Tour Login</h2>
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="email" className="block text-gray-700 font-medium mb-2">Email</label>
