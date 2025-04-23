@@ -6,30 +6,54 @@ const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     if (!fullName || !email || !password || !confirmPassword) {
-      alert('Please fill in all fields.');
+      setError('Please fill in all fields.');
       return;
     }
+
     if (password !== confirmPassword) {
-      alert('Passwords do not match.');
+      setError('Passwords do not match.');
       return;
     }
-    alert(`Sign up successful! Email: ${email}`);
-    // Thêm logic gửi dữ liệu đến server nếu cần
+
+    try {
+      // Gọi API đăng ký
+      const response = await fetch('http://localhost:8080/customer/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fullName, email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(errorData || 'Signup failed. Please try again.');
+      }
+
+      alert('Sign up successful!');
+      navigate('/'); // Điều hướng về trang đăng nhập
+    } catch (error) {
+      setError(error.message || 'Signup failed. Please try again.');
+    }
   };
 
   const handleLoginRedirect = () => {
-    navigate('/login');
+    navigate('/');
   };
 
   return (
     <div className="bg-gray-100 flex items-center justify-center min-h-screen">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Travel Tour Sign Up</h2>
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="fullName" className="block text-gray-700 font-medium mb-2">Full Name</label>

@@ -31,7 +31,7 @@ const Login = () => {
       localStorage.setItem('refreshToken', data.refreshToken);
 
       alert('Login successful!');
-      navigate('/dashboard'); // Chuyển hướng sau khi đăng nhập thành công
+      navigate('/profile'); // Chuyển hướng sau khi đăng nhập thành công
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
     }
