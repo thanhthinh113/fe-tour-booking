@@ -1,96 +1,116 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 
 import hinh1 from "../assets/hinh1.png";
-import { useNavigate } from "react-router-dom";
 
 function TourDetail() {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const [tour, setTour] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchTourDetail = async () => {
+      try {
+        const response = await fetch(`http://localhost:3333/tour/${id}`);
+        if (!response.ok) {
+          throw new Error('Tour không tồn tại');
+        }
+        const data = await response.json();
+        setTour(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTourDetail();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="text-center">Đang tải thông tin tour...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="text-center text-red-500">{error}</div>
+        <button
+          onClick={() => navigate('/tours')}
+          className="mt-4 mx-auto block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Quay lại danh sách tour
+        </button>
+      </div>
+    );
+  }
+
+  if (!tour) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="text-center">Không tìm thấy thông tin tour</div>
+        <button
+          onClick={() => navigate('/tours')}
+          className="mt-4 mx-auto block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Quay lại danh sách tour
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      {/* Tour Information Section */}
-      <div className="container mx-auto py-8">
-        <h2 className="text-2xl font-bold mb-4">
-          Tour Hà Giang Cao Bằng 5 Ngày 4 Đêm | Bản Giốc - Pác Bó - Động Ngườm
-          Ngao - Ba Bể
-        </h2>
-        <div className="grid grid-cols-2 gap-8">
-          <div>
-            <img
-              src={hinh1} // Thay đổi đường dẫn ảnh
-              alt="Tour 1"
-              className="w-full h-100 object-cover mb-4"
-            />
-            <p className="mb-4">
-              {/* Thêm mô tả chi tiết tour ở đây */}
-              Hành trình khám phá Hà Giang - Cao Bằng 5 ngày 4 đêm đưa du khách
-              đến với những địa danh nổi tiếng như: Bản Giốc, Pác Bó, Động Ngườm
-              Ngao, Ba Bể...
-            </p>
-            <p className="mb-4">
-              <strong>Ngày 1:</strong> Hà Nội - Hà Giang - Quản Bạ - Yên Minh
-              <br />
-              Xe và HDV đón khách tại điểm hẹn trong khu vực Phố Cổ và 10 điểm
-              hẹn đón khách trên trục đường Nhật Tân - Nội Bài, khởi hành đi Hà
-              Giang.
-              <br />
-              Đến Yên Minh, Quý khách nhận phòng khách sạn, ăn tối và nghỉ ngơi.
-            </p>
-            {/* ... Thêm thông tin chi tiết các ngày tiếp theo ... */}
-            <p className="mb-4">
-              <strong>Lưu ý cho chuyến đi:</strong>
-              <br />
-              - Quý khách nên mang theo quần áo ấm, giày dép thoải mái, mũ
-              nón...
-              <br />
-              - Mang theo các loại thuốc cá nhân nếu cần thiết.
-              <br />- Chuẩn bị máy ảnh, điện thoại để lưu giữ những khoảnh khắc
-              đẹp.
-            </p>
-          </div>
-          <div>
-            <div className="bg-gray-100 p-4 rounded mb-4">
-              <p className="text-xl font-bold text-blue-600 mb-2">
-                5,190,000 VND/người
+    <div className="container mx-auto py-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+        <img
+          src={tour.image}
+          alt={tour.title}
+          className="w-full h-96 object-cover"
+        />
+        <div className="p-6">
+          <h1 className="text-3xl font-bold mb-4">{tour.title}</h1>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <p className="text-gray-600">Địa điểm:</p>
+              <p className="font-semibold">{tour.location}</p>
+            </div>
+            <div>
+              <p className="text-gray-600">Giá:</p>
+              <p className="font-semibold text-xl text-blue-600">
+                {new Intl.NumberFormat('vi-VN', {
+                  style: 'currency',
+                  currency: 'VND'
+                }).format(tour.price)}
               </p>
-              <div className="flex items-center mb-2">
-                <label className="mr-2">Khởi hành:</label>
-                <input type="date" className="border rounded p-1" />
-              </div>
-              <div className="flex items-center mb-2">
-                <label className="mr-2">Số khách:</label>
-                <input type="number" className="border rounded p-1" />
-              </div>
-              <button
-                onClick={() => navigate("/dangky")}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
-              >
-                ĐẶT TOUR
-              </button>
             </div>
-            <div className="bg-gray-100 p-4 rounded">
-              <p className="text-xl font-bold mb-2">TỔNG ĐÀI TƯ VẤN</p>
-              <p>Quý khách có thắc mắc vui lòng gọi:</p>
-              <p className="text-blue-600 font-bold">022 2222 2222</p>
-            </div>
-            <div className="mt-8">
-              <h3 className="text-lg font-bold mb-4">Tour nổi bật</h3>
-              <div className="grid grid-cols-1 gap-4">
-                {/* Thêm các tour nổi bật khác */}
-                <div className=" rounded-lg  p-4">
-                  <img
-                    src={hinh1} // Thay đổi đường dẫn ảnh
-                    alt="Tour 2"
-                    className="w-100 h-54 object-cover mb-2"
-                  />
-                  <h4 className="font-semibold">Tour Cao Bằng 2N1Đ</h4>
-                  <p className="text-blue-600">2,190,000 VND</p>
-                  <button className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-                    Xem chi tiết
-                  </button>
-                </div>
-              </div>
-            </div>
+          </div>
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">Mô tả tour</h2>
+            <p className="text-gray-700 whitespace-pre-line">{tour.description}</p>
+          </div>
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">Lịch trình</h2>
+            <p className="text-gray-700 whitespace-pre-line">{tour.duration} Ngày</p>
+          </div>
+          <div className="flex justify-between items-center">
+            <button
+              onClick={() => navigate('/tours')}
+              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+            >
+              Quay lại
+            </button>
+            <button
+              onClick={() => navigate(`/booking/${tour.id_tour}`)}
+              className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600"
+            >
+              Đặt tour
+            </button>
           </div>
         </div>
       </div>

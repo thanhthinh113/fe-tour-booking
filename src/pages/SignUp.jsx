@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 const SignUp = () => {
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -13,7 +14,7 @@ const SignUp = () => {
     e.preventDefault();
     setError('');
 
-    if (!fullName || !email || !password || !confirmPassword) {
+    if (!fullName || !email || !password || !confirmPassword || !phone) {
       setError('Please fill in all fields.');
       return;
     }
@@ -24,22 +25,28 @@ const SignUp = () => {
     }
 
     try {
-      // Gọi API đăng ký
-      const response = await fetch('http://localhost:8080/customer/auth/signup', {
+      const response = await fetch('http://localhost:8081/customer/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ fullName, email, password }),
+        body: JSON.stringify({
+          name: fullName,
+          email,
+          password,
+          phone,
+          role: 'CUSTOMER',
+          authProvider: 'LOCAL',
+        }),
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData || 'Signup failed. Please try again.');
+        const errorText = await response.text();
+        throw new Error(errorText || 'Signup failed. Please try again.');
       }
 
       alert('Sign up successful!');
-      navigate('/'); // Điều hướng về trang đăng nhập
+      navigate('/');
     } catch (error) {
       setError(error.message || 'Signup failed. Please try again.');
     }
@@ -64,6 +71,18 @@ const SignUp = () => {
               onChange={(e) => setFullName(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your full name"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label htmlFor="phone" className="block text-gray-700 font-medium mb-2">Phone</label>
+            <input
+              type="text"
+              id="phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter your phone number"
               required
             />
           </div>

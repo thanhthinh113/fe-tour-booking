@@ -1,113 +1,272 @@
-import React from "react";
-import { useNavigate } from "react-router-dom"; // Import điều hướng
-import hinh1 from "../assets/hinh1.png";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'react-toastify';
 
 function PaymentForm() {
-  const navigate = useNavigate(); // Khởi tạo hook điều hướng
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { isAuthenticated, token } = useAuth();
+  const [booking, setBooking] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [processingPayment, setProcessingPayment] = useState(false);
 
-  const handleConfirm = () => {
-    // Sau khi xử lý logic thanh toán (nếu có), điều hướng về trang chủ
-    navigate("/");
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    const fetchBookingDetails = async () => {
+      try {
+        const response = await fetch(`http://localhost:5555/booking/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Không thể tải thông tin đặt tour');
+        }
+
+        const data = await response.json();
+        setBooking(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookingDetails();
+  }, [id, isAuthenticated, token, navigate]);
+
+  const handlePayment = async (paymentMethod) => {
+    try {
+      setProcessingPayment(true);
+      setError('');
+
+      // Validate booking data
+      if (!booking || !booking.total_price) {
+        throw new Error('Thông tin đặt tour không hợp lệ');
+      }
+
+      // Convert total_price to number if it's a string
+      const amount = typeof booking.total_price === 'string' 
+        ? parseFloat(booking.total_price) 
+        : booking.total_price;
+
+      // Handle COD payment separately
+      if (paymentMethod === 'COD') {
+        try {
+          const updateResponse = await fetch(`http://localhost:5555/booking`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              ...booking,
+              status: 'CONFIRMED',
+              payment_method: 'COD'
+            })
+          });
+
+          if (!updateResponse.ok) {
+            const errorData = await updateResponse.text();
+            console.error('Error updating booking:', errorData);
+            throw new Error('Không thể cập nhật trạng thái đặt tour');
+          }
+
+          // Show success message and navigate
+          toast.success('🎉 Đặt tour thành công!', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            onClose: () => navigate('/')
+          });
+          
+          return;
+        } catch (error) {
+          console.error('Error updating booking status:', error);
+          throw new Error('Không thể cập nhật trạng thái đặt tour: ' + error.message);
+        }
+      }
+
+      // Handle online payment (VNPAY)
+      const paymentRequest = {
+        orderId: id,
+        amount: amount,
+        paymentMethod: 'VNPAY',
+        returnUrl: `${window.location.origin}/payment/callback`,
+        customerEmail: booking.user_email || 'customer@example.com',
+        description: `Thanh toán đặt tour ${booking.tour_title || id}`
+      };
+
+      console.log('Sending payment request:', paymentRequest);
+
+      const response = await fetch('http://localhost:8086/api/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
+        body: JSON.stringify(paymentRequest)
+      });
+
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+
+      if (!response.ok) {
+        let errorMessage = 'Không thể tạo giao dịch thanh toán';
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          console.error('Error parsing error response:', e);
+        }
+        throw new Error(`${errorMessage}. (Mã lỗi: ${response.status})`);
+      }
+
+      let paymentData;
+      try {
+        paymentData = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Error parsing success response:', e);
+        throw new Error('Lỗi xử lý phản hồi từ máy chủ');
+      }
+
+      console.log('Payment response:', paymentData);
+
+      if (!paymentData) {
+        throw new Error('Không nhận được thông tin thanh toán từ máy chủ');
+      }
+
+      if (!paymentData.paymentUrl) {
+        throw new Error('Không nhận được đường dẫn thanh toán VNPay');
+      }
+
+      window.location.href = paymentData.paymentUrl;
+    } catch (error) {
+      console.error('Payment error:', error);
+      setError(error.message);
+    } finally {
+      setProcessingPayment(false);
+    }
   };
 
-  return (
-    <div className="container mx-auto py-8">
-      {/* Tiến trình đặt tour */}
-      <div className="flex justify-center items-center mb-8 w-3/4 mx-auto">
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center mr-2">
-            1
-          </div>
-          <span className="font-semibold">Điền thông tin</span>
-        </div>
-        <div className="w-16 border-b bg-blue-600 border-gray-300 mx-2 h-1"></div>
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center mr-2">
-            2
-          </div>
-          <span className="text-gray-600">Thanh toán</span>
-        </div>
-        <div className="w-16 border-b border-gray-300 mx-2 h-1"></div>
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full border border-gray-300 text-gray-600 flex items-center justify-center mr-2">
-            3
-          </div>
-          <span className="text-gray-600">Xác nhận</span>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Đang tải thông tin...</p>
         </div>
       </div>
+    );
+  }
 
-      {/* Form thanh toán */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <h2 className="text-2xl font-bold mb-4">Thanh toán qua</h2>
-          <div className="space-y-2">
-            <button className="bg-gray-100 hover:bg-gray-200 p-3 rounded w-full text-left">
-              Thẻ ATM nội địa
-            </button>
-            <button className="bg-gray-100 hover:bg-gray-200 p-3 rounded w-full text-left">
-              Thẻ tín dụng quốc tế
-            </button>
-            <button className="bg-gray-100 hover:bg-gray-200 p-3 rounded w-full text-left">
-              QR Code
-            </button>
-            <button className="bg-gray-100 hover:bg-gray-200 p-3 rounded w-full text-left">
-              Chuyển khoản
-            </button>
-            <button className="bg-gray-100 hover:bg-gray-200 p-3 rounded w-full text-left">
-              Tại văn phòng
-            </button>
-          </div>
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold mb-4">
-            Thanh toán qua thẻ ATM nội địa
-          </h2>
-          <p className="mb-4">Lưu ý trước khi thanh toán</p>
-          <ul className="list-disc list-inside mb-4">
-            <li>
-              Thẻ thanh toán phải do ngân hàng nội địa phát hành và đã được kích
-              hoạt chức năng thanh toán trực tuyến.
-            </li>
-            <li>Vui lòng xem hướng dẫn chi tiết tại đây.</li>
-            <li>Xuất hóa đơn điện tử qua email.</li>
-          </ul>
-          <label className="flex items-center mb-4">
-            <input type="checkbox" className="mr-2" />
-            Tôi đồng ý với các điều khoản đặt hàng của TourDuLich
-          </label>
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
+          <div className="text-center text-red-600 mb-4">{error}</div>
           <button
-            onClick={handleConfirm}
-            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded w-full"
+            onClick={() => navigate('/profile')}
+            className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
-            Xác nhận
+            Quay lại
           </button>
-          <p className="mt-4 text-sm text-gray-600">
-            Vui lòng thanh toán trước 00:15:00
-          </p>
-          <div className="bg-gray-100 p-4 rounded mt-8">
-            <div className="flex items-center mb-4">
-              <img
-                src={hinh1}
-                alt="Tour Thumbnail"
-                className="w-24 h-20 object-cover mr-4"
-              />
-              <div>
-                <h3 className="font-semibold">
-                  Tour Cao Bằng 2 Ngày 1 Đêm: Pác Bó - Thác Bản Giốc - Động
-                  Ngườm Ngao
-                </h3>
-                <p>Mã tour: TOHANDBIMOCSAP5N4D</p>
-                <p>Ngày khởi hành: 20/03/2025</p>
-                <p>Số khách: 1 khách</p>
-                <p>Giá 1 khách: 5,790,000 VND</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
+          <div className="text-center text-gray-600 mb-4">Không tìm thấy thông tin đặt tour</div>
+          <button
+            onClick={() => navigate('/profile')}
+            className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Quay lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 py-12">
+      <div className="max-w-3xl mx-auto px-4">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="p-6">
+            <h1 className="text-2xl font-bold mb-6">Thanh toán đặt tour</h1>
+            
+            {/* Booking Summary */}
+            <div className="bg-gray-50 p-4 rounded-lg mb-6">
+              <h2 className="text-xl font-semibold mb-4">Thông tin đặt tour</h2>
+              <div className="space-y-2">
+                <p><span className="font-medium">Mã đặt tour:</span> {booking.id}</p>
+                <p><span className="font-medium">Tour:</span> {booking.tour_title}</p>
+                <p><span className="font-medium">Ngày khởi hành:</span> {new Date(booking.booking_date).toLocaleDateString('vi-VN')}</p>
+                <p><span className="font-medium">Số người:</span> {booking.number_of_people}</p>
+                <p className="text-lg font-semibold mt-4">
+                  Tổng tiền: {new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND'
+                  }).format(booking.total_price)}
+                </p>
               </div>
             </div>
-            <div className="border-t border-gray-300 pt-4">
-              <p className="font-semibold">Tổng tiền: 5,790,000 VND</p>
-              <p className="text-sm text-gray-600">
-                Gọi 0222 2222 2222 để được hỗ trợ 24/7
-              </p>
+
+            {/* Payment Methods */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Chọn phương thức thanh toán</h2>
+              
+              <button
+                onClick={() => handlePayment('VNPAY')}
+                disabled={processingPayment}
+                className="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {processingPayment ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                ) : (
+                  <img src="/vnpay-logo.png" alt="VNPay" className="h-6 mr-2" />
+                )}
+                Thanh toán qua VNPay
+              </button>
+
+              <button
+                onClick={() => handlePayment('COD')}
+                disabled={processingPayment}
+                className="w-full bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Thanh toán khi nhận tour (COD)
+              </button>
+
+              <button
+                onClick={() => navigate(`/tourdetail/${booking.tour_id}`)}
+                disabled={processingPayment}
+                className="w-full bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Hủy thanh toán
+              </button>
             </div>
+
+            {error && (
+              <div className="mt-4 p-4 bg-red-100 text-red-600 rounded-lg">
+                {error}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8080/customer/auth/login', {
+      const response = await fetch('http://localhost:8081/customer/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -26,12 +28,15 @@ const Login = () => {
       }
 
       const data = await response.json();
-      // Lưu token vào localStorage
-      localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
-
-      alert('Login successful!');
-      navigate('/profile'); // Chuyển hướng sau khi đăng nhập thành công
+      
+      // Wait for login process to complete
+      const loginSuccess = await login(data.accessToken);
+      if (loginSuccess) {
+        navigate('/');
+      } else {
+        throw new Error('Failed to fetch user profile');
+      }
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
     }
@@ -39,7 +44,7 @@ const Login = () => {
 
   const handleGoogleLogin = () => {
     // Chuyển hướng đến endpoint đăng nhập Google
-    window.location.href = 'http://localhost:8080/customer/auth/login/google';
+    window.location.href = 'http://localhost:8081/customer/auth/login/google';
   };
 
   const handleSignUpRedirect = () => {

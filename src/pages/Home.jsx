@@ -66,8 +66,6 @@ function Home() {
   return (
     <div>
       <Banner />
-      <SearchFilter />
-      <TourList title="Tour trong nước" tours={domesticTours} />
       <TourList title="Tour quốc tế" tours={internationalTours} />
     </div>
   );
