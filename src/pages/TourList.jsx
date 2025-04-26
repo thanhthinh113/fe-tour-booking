@@ -11,7 +11,8 @@ function TourList() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Gọi API khi component mount hoặc khi các filter thay đổi
+  
+  // Gọi API
   useEffect(() => {
     const fetchTours = async () => {
       setLoading(true);
