@@ -5,7 +5,6 @@ import hinh1 from "../assets/hinh1.png";
 
 function Home() {
   useEffect(() => {
-    // Thêm script của Dialogflow nếu chưa có
     const existingScript = document.querySelector(
       'script[src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"]'
     );
@@ -17,7 +16,6 @@ function Home() {
       document.body.appendChild(script);
     }
 
-    // Tạo thẻ df-messenger nếu chưa có
     if (!document.querySelector("df-messenger")) {
       const dfMessenger = document.createElement("df-messenger");
       dfMessenger.setAttribute("intent", "WELCOME");
