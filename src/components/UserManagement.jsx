@@ -1,28 +1,9 @@
-import React, { useState } from "react";
-
-const initialUsers = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "1234567890",
-    role: "CUSTOMER",
-    authProvider: "LOCAL",
-    createdAt: "2024-01-01 10:00:00",
-  },
-  {
-    id: 2,
-    name: "Jane Admin",
-    email: "admin@example.com",
-    phone: "0987654321",
-    role: "ADMIN",
-    authProvider: "GOOGLE",
-    createdAt: "2024-02-15 14:20:00",
-  },
-];
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
 
 const UserManagement = () => {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
@@ -31,15 +12,117 @@ const UserManagement = () => {
     authProvider: "LOCAL",
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [isEdit, setIsEdit] = useState(false); // Track if we are editing an existing user
+  const [editUserId, setEditUserId] = useState(null); // Store the ID of the user being edited
 
+  const { token } = useAuth();
+
+  // Fetch users from the backend
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get(
+          "http://customer.phamhuuthuan.io.vn:8081/customer/customerlist",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setUsers(response.data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    if (token) {
+      fetchUsers();
+    }
+  }, [token]);
+
+  // Handle form input changes
   const handleInputChange = (e) => {
     setNewUser({ ...newUser, [e.target.name]: e.target.value });
   };
 
-  const handleAddUser = () => {
-    const id = users.length + 1;
-    const createdAt = new Date().toISOString();
-    setUsers([...users, { ...newUser, id, createdAt }]);
+  // Add new user
+  const handleAddUser = async () => {
+    try {
+      const response = await axios.post(
+        "http://customer.phamhuuthuan.io.vn:8081/customer/update",
+        newUser,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setUsers([...users, response.data]);
+        resetForm();
+      }
+    } catch (error) {
+      console.error("Error adding user:", error);
+    }
+  };
+
+  // Update existing user
+  const handleUpdateUser = async () => {
+    try {
+      const response = await axios.put(
+        `http://customer.phamhuuthuan.io.vn:8081/customer/update`,
+        newUser,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setUsers(
+          users.map((user) =>
+            user.id === editUserId ? { ...user, ...newUser } : user
+          )
+        );
+        resetForm();
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+    }
+  };
+
+  // Delete user
+  const handleDeleteUser = async (id) => {
+    try {
+      const response = await axios.delete(
+        `http://customer.phamhuuthuan.io.vn:8081/customer/delete/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        // Filter out the deleted user from the list
+        setUsers(users.filter((user) => user.id !== id));
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  };
+
+  // Handle search term change
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Reset form state
+  const resetForm = () => {
+    setIsEdit(false);
+    setEditUserId(null);
     setNewUser({
       name: "",
       email: "",
@@ -49,15 +132,7 @@ const UserManagement = () => {
     });
   };
 
-  const handleDeleteUser = (id) => {
-    setUsers(users.filter((user) => user.id !== id));
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  // Lọc người dùng theo searchTerm
+  // Filter users based on the search term
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,7 +144,7 @@ const UserManagement = () => {
     <div>
       <h2 className="text-xl font-semibold mb-4">Quản lý người dùng</h2>
 
-      {/* Thanh tìm kiếm */}
+      {/* Search bar */}
       <div className="mb-4">
         <input
           type="text"
@@ -80,7 +155,7 @@ const UserManagement = () => {
         />
       </div>
 
-      {/* Form thêm người dùng */}
+      {/* User form for adding/updating */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         {[
           ["name", "Name"],
@@ -97,18 +172,28 @@ const UserManagement = () => {
               value={newUser[name]}
               onChange={handleInputChange}
               className="w-full border px-2 py-1 rounded"
+              placeholder={`Enter ${label.toLowerCase()}`}
+              required
             />
           </div>
         ))}
         <button
-          onClick={handleAddUser}
+          onClick={isEdit ? handleUpdateUser : handleAddUser}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
-          Add User
+          {isEdit ? "Update User" : "Add User"}
         </button>
+        {isEdit && (
+          <button
+            onClick={resetForm}
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+          >
+            Cancel
+          </button>
+        )}
       </div>
 
-      {/* Bảng người dùng */}
+      {/* Users table */}
       <table className="min-w-full bg-white border">
         <thead>
           <tr>
@@ -118,30 +203,52 @@ const UserManagement = () => {
             <th className="border px-4 py-2">Phone</th>
             <th className="border px-4 py-2">Role</th>
             <th className="border px-4 py-2">Auth Provider</th>
-            <th className="border px-4 py-2">Created At</th>
             <th className="border px-4 py-2">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {filteredUsers.map((user) => (
-            <tr key={user.id}>
-              <td className="border px-4 py-2">{user.id}</td>
-              <td className="border px-4 py-2">{user.name}</td>
-              <td className="border px-4 py-2">{user.email}</td>
-              <td className="border px-4 py-2">{user.phone}</td>
-              <td className="border px-4 py-2">{user.role}</td>
-              <td className="border px-4 py-2">{user.authProvider}</td>
-              <td className="border px-4 py-2">{user.createdAt}</td>
-              <td className="border px-4 py-2">
-                <button
-                  onClick={() => handleDeleteUser(user.id)}
-                  className="text-red-500 hover:underline"
-                >
-                  Delete
-                </button>
+          {filteredUsers.length === 0 ? (
+            <tr>
+              <td colSpan="7" className="text-center py-4">
+                No users found
               </td>
             </tr>
-          ))}
+          ) : (
+            filteredUsers.map((user) => (
+              <tr key={user.id}>
+                <td className="border px-4 py-2">{user.id}</td>
+                <td className="border px-4 py-2">{user.name}</td>
+                <td className="border px-4 py-2">{user.email}</td>
+                <td className="border px-4 py-2">{user.phone}</td>
+                <td className="border px-4 py-2">{user.role}</td>
+                <td className="border px-4 py-2">{user.authProvider}</td>
+                <td className="border px-4 py-2">
+                  <button
+                    onClick={() => {
+                      setIsEdit(true);
+                      setEditUserId(user.id);
+                      setNewUser({
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone,
+                        role: user.role,
+                        authProvider: user.authProvider,
+                      });
+                    }}
+                    className="text-blue-500 hover:underline"
+                  >
+                    Update
+                  </button>
+                  <button
+                    onClick={() => handleDeleteUser(user.id)}
+                    className="text-red-500 hover:underline ml-2"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

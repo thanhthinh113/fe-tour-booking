@@ -30,11 +30,11 @@ const tabs = ["Users", "Products", "Revenue"];
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("Users");
-  // const user = JSON.parse(localStorage.getItem("userProfile"));
+  const user = JSON.parse(localStorage.getItem("userProfile"));
 
-  // if (!user || user.role !== "ADMIN") {
-  //   return <NotFound />; // hoặc trang báo lỗi
-  // }
+  if (!user || user.role !== "ADMIN") {
+    return <NotFound />; // hoặc trang báo lỗi
+  }
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow px-6 py-4">
