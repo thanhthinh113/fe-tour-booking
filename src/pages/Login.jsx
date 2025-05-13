@@ -1,63 +1,78 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch('http://localhost:8081/customer/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        "http://localhost:8081/customer/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.text();
-        throw new Error(errorData || 'Login failed. Please try again.');
+        throw new Error(errorData || "Login failed. Please try again.");
       }
 
       const data = await response.json();
-      localStorage.setItem('refreshToken', data.refreshToken);
-      
+      localStorage.setItem("refreshToken", data.refreshToken);
+
       // Wait for login process to complete
       const loginSuccess = await login(data.accessToken);
       if (loginSuccess) {
-        navigate('/');
+        // Kiểm tra vai trò của người dùng (giả sử bạn lưu vai trò người dùng trong `data.role`)
+        if (data.role === "ADMIN") {
+          navigate("/admin"); // Chuyển hướng đến trang Admin nếu người dùng là ADMIN
+        } else {
+          navigate("/"); // Nếu không phải admin, chuyển hướng về trang chủ
+        }
       } else {
-        throw new Error('Failed to fetch user profile');
+        throw new Error("Failed to fetch user profile");
       }
     } catch (err) {
-      setError(err.message || 'Login failed. Please try again.');
+      setError(err.message || "Login failed. Please try again.");
     }
   };
   const handleGoogleLogin = () => {
     // Chuyển hướng đến endpoint đăng nhập Google
-    window.location.href = 'http://localhost:8081/oauth2/authorization/google';
+    window.location.href = "http://localhost:8081/oauth2/authorization/google";
   };
 
   const handleSignUpRedirect = () => {
-    navigate('/signup');
+    navigate("/signup");
   };
 
   return (
     <div className="bg-gray-100 flex items-center justify-center min-h-screen">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Travel Tour Login</h2>
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+          Travel Tour Login
+        </h2>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="email" className="block text-gray-700 font-medium mb-2">Email</label>
+            <label
+              htmlFor="email"
+              className="block text-gray-700 font-medium mb-2"
+            >
+              Email
+            </label>
             <input
               type="email"
               id="email"
@@ -69,7 +84,12 @@ const Login = () => {
             />
           </div>
           <div className="mb-6">
-            <label htmlFor="password" className="block text-gray-700 font-medium mb-2">Password</label>
+            <label
+              htmlFor="password"
+              className="block text-gray-700 font-medium mb-2"
+            >
+              Password
+            </label>
             <input
               type="password"
               id="password"
@@ -94,7 +114,7 @@ const Login = () => {
           Login with Google
         </button>
         <p className="text-center text-gray-600 mt-4">
-          Don't have an account?{' '}
+          Don't have an account?{" "}
           <span
             onClick={handleSignUpRedirect}
             className="text-blue-500 hover:underline cursor-pointer"

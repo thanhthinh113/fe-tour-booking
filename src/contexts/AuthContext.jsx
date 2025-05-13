@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 
@@ -8,92 +7,85 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(localStorage.getItem('accessToken'));
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [token, setToken] = useState(() => localStorage.getItem("accessToken"));
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("userProfile");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem("accessToken")
+  );
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const initializeAuth = async () => {
       if (token) {
-        await fetchUserProfile();
+        const success = await fetchUserProfile(token);
+        if (!success) logout();
       }
       setIsLoading(false);
     };
-
     initializeAuth();
   }, [token]);
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = async (authToken) => {
     try {
-      const response = await fetch('http://localhost:8081/customer/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const response = await fetch(
+        "http://customer.phamhuuthuan.io.vn:8081/customer/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
+        localStorage.setItem("userProfile", JSON.stringify(userData)); // Lưu user vào localStorage
         setIsAuthenticated(true);
+        return true;
       } else {
-        // Nếu token không hợp lệ, đăng xuất
-        logout();
+        console.warn("Invalid token during fetch profile");
+        return false;
       }
     } catch (error) {
-      console.error('Error fetching user profile:', error);
-      logout();
+      console.error("Error fetching user profile:", error);
+      return false;
     }
   };
 
   const login = async (newToken) => {
-    try {
-      setToken(newToken);
-      localStorage.setItem('accessToken', newToken);
-      await fetchUserProfile();
-      return true;
-    } catch (error) {
-      console.error('Error during login:', error);
+    localStorage.setItem("accessToken", newToken);
+    setToken(newToken);
+    const success = await fetchUserProfile(newToken);
+    if (!success) {
       logout();
       return false;
     }
+    return true;
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('accessToken');
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("userProfile"); // Xóa user khi logout
   };
 
   const checkAuth = async () => {
-    if (!token) {
-      setIsAuthenticated(false);
-      return false;
-    }
-
-    try {
-      const response = await fetch('http://localhost:8081/customer/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-        setIsAuthenticated(true);
-        return true;
-      } else {
-        logout();
-        return false;
-      }
-    } catch (error) {
-      console.error('Error checking auth:', error);
+    const savedToken = localStorage.getItem("accessToken");
+    if (!savedToken) {
       logout();
       return false;
     }
+    const valid = await fetchUserProfile(savedToken);
+    if (!valid) {
+      logout();
+      return false;
+    }
+    return true;
   };
 
   const value = {
@@ -103,7 +95,7 @@ export function AuthProvider({ children }) {
     isLoading,
     login,
     logout,
-    checkAuth
+    checkAuth,
   };
 
   if (isLoading) {
@@ -114,9 +106,5 @@ export function AuthProvider({ children }) {
     );
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-} 
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
