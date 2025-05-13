@@ -13,7 +13,6 @@ function TourDetail() {
   useEffect(() => {
     const fetchTourDetail = async () => {
       try {
-        // ghi chu api tour du lich
         const response = await fetch(`http://localhost:3333/tour/${id}`);
         if (!response.ok) {
           throw new Error('Tour không tồn tại');

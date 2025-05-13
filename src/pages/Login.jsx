@@ -30,6 +30,7 @@ const Login = () => {
       const data = await response.json();
       localStorage.setItem('refreshToken', data.refreshToken);
       
+      // Wait for login process to complete
       const loginSuccess = await login(data.accessToken);
       if (loginSuccess) {
         navigate('/');
@@ -40,9 +41,9 @@ const Login = () => {
       setError(err.message || 'Login failed. Please try again.');
     }
   };
-
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:8081/customer/auth/login/google';
+    // Chuyển hướng đến endpoint đăng nhập Google
+    window.location.href = 'http://localhost:8081/oauth2/authorization/google';
   };
 
   const handleSignUpRedirect = () => {

@@ -219,7 +219,7 @@ function BookingForm() {
                 />
               </div>
 
-              {/* Total Price to fix*/}
+              {/* Total Price */}
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-lg font-semibold">
                   Tổng tiền: {new Intl.NumberFormat('vi-VN', {
@@ -253,5 +253,3 @@ function BookingForm() {
 }
 
 export default BookingForm;
-
-

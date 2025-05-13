@@ -22,6 +22,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import PaymentCallback from './pages/PaymentCallback';
 import MyBookings from "./pages/MyBookings";
 import Contact from "./pages/ContactUs";
+import OAuth2SuccessPage from './contexts/OAuth2SuccessPage ';
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
               <Route path="/termofservice" element={<TermsOfService />} />
               <Route path="/my-bookings" element={<MyBookings />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/oauth2/success" element={<OAuth2SuccessPage />} />
             </Routes>
           </main>
           <Footer />
