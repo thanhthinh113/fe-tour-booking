@@ -15,7 +15,7 @@ const Login = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:8081/customer/auth/login",
+        "http://customer.phamhuuthuan.io.vn:8081/customer/auth/login",
         {
           method: "POST",
           headers: {
@@ -51,7 +51,8 @@ const Login = () => {
   };
   const handleGoogleLogin = () => {
     // Chuyển hướng đến endpoint đăng nhập Google
-    window.location.href = "http://localhost:8081/oauth2/authorization/google";
+    window.location.href =
+      "http://customer.phamhuuthuan.io.vn:8081/oauth2/authorization/google";
   };
 
   const handleSignUpRedirect = () => {
