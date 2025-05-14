@@ -4,16 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
-  const [newUser, setNewUser] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    role: "CUSTOMER",
-    authProvider: "LOCAL",
-  });
   const [searchTerm, setSearchTerm] = useState("");
-  const [isEdit, setIsEdit] = useState(false); // Track if we are editing an existing user
-  const [editUserId, setEditUserId] = useState(null); // Store the ID of the user being edited
 
   const { token } = useAuth();
 
@@ -40,59 +31,6 @@ const UserManagement = () => {
     }
   }, [token]);
 
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    setNewUser({ ...newUser, [e.target.name]: e.target.value });
-  };
-
-  // Add new user
-  const handleAddUser = async () => {
-    try {
-      const response = await axios.post(
-        "http://customer.phamhuuthuan.io.vn:8081/customer/update",
-        newUser,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        setUsers([...users, response.data]);
-        resetForm();
-      }
-    } catch (error) {
-      console.error("Error adding user:", error);
-    }
-  };
-
-  // Update existing user
-  const handleUpdateUser = async () => {
-    try {
-      const response = await axios.put(
-        `http://customer.phamhuuthuan.io.vn:8081/customer/update`,
-        newUser,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        setUsers(
-          users.map((user) =>
-            user.id === editUserId ? { ...user, ...newUser } : user
-          )
-        );
-        resetForm();
-      }
-    } catch (error) {
-      console.error("Error updating user:", error);
-    }
-  };
-
   // Delete user
   const handleDeleteUser = async (id) => {
     try {
@@ -106,7 +44,6 @@ const UserManagement = () => {
       );
 
       if (response.status === 200) {
-        // Filter out the deleted user from the list
         setUsers(users.filter((user) => user.id !== id));
       }
     } catch (error) {
@@ -117,19 +54,6 @@ const UserManagement = () => {
   // Handle search term change
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-  };
-
-  // Reset form state
-  const resetForm = () => {
-    setIsEdit(false);
-    setEditUserId(null);
-    setNewUser({
-      name: "",
-      email: "",
-      phone: "",
-      role: "CUSTOMER",
-      authProvider: "LOCAL",
-    });
   };
 
   // Filter users based on the search term
@@ -153,44 +77,6 @@ const UserManagement = () => {
           onChange={handleSearchChange}
           className="border p-2 rounded w-full"
         />
-      </div>
-
-      {/* User form for adding/updating */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        {[
-          ["name", "Name"],
-          ["email", "Email"],
-          ["phone", "Phone"],
-          ["role", "Role"],
-          ["authProvider", "Auth Provider"],
-        ].map(([name, label]) => (
-          <div key={name}>
-            <label className="block text-sm font-medium">{label}</label>
-            <input
-              type={name === "phone" ? "tel" : "text"}
-              name={name}
-              value={newUser[name]}
-              onChange={handleInputChange}
-              className="w-full border px-2 py-1 rounded"
-              placeholder={`Enter ${label.toLowerCase()}`}
-              required
-            />
-          </div>
-        ))}
-        <button
-          onClick={isEdit ? handleUpdateUser : handleAddUser}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          {isEdit ? "Update User" : "Add User"}
-        </button>
-        {isEdit && (
-          <button
-            onClick={resetForm}
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-          >
-            Cancel
-          </button>
-        )}
       </div>
 
       {/* Users table */}
@@ -224,24 +110,8 @@ const UserManagement = () => {
                 <td className="border px-4 py-2">{user.authProvider}</td>
                 <td className="border px-4 py-2">
                   <button
-                    onClick={() => {
-                      setIsEdit(true);
-                      setEditUserId(user.id);
-                      setNewUser({
-                        name: user.name,
-                        email: user.email,
-                        phone: user.phone,
-                        role: user.role,
-                        authProvider: user.authProvider,
-                      });
-                    }}
-                    className="text-blue-500 hover:underline"
-                  >
-                    Update
-                  </button>
-                  <button
                     onClick={() => handleDeleteUser(user.id)}
-                    className="text-red-500 hover:underline ml-2"
+                    className="text-red-500 hover:underline"
                   >
                     Delete
                   </button>
