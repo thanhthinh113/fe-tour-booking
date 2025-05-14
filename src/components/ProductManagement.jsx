@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -38,7 +39,7 @@ const ProductManagement = () => {
     };
 
     axios
-      .post("http://localhost:3333/tours", newProduct)
+      .post("http://localhost:3333/tour", newProduct)
       .then((res) => {
         setProducts([...products, res.data]); // hoặc fetch lại toàn bộ list nếu muốn đồng bộ hơn
         setNewTour({
@@ -59,16 +60,39 @@ const ProductManagement = () => {
   };
 
   const handleDelete = (id) => {
-    axios
-      .delete(`http://localhost:3333/tours/${id}`)
-      .then(() => {
-        setProducts(products.filter((p) => p.id_tour !== id));
-      })
-      .catch((err) => {
-        console.error("Lỗi khi xoá tour:", err);
-      });
+    toast.info(
+      <div>
+        <p>Bạn có chắc chắn muốn xoá tour này?</p>
+        <div className="flex justify-end mt-2 space-x-2">
+          <button
+            className="px-2 py-1 bg-red-500 text-white rounded"
+            onClick={() => {
+              axios
+                .delete(`http://localhost:3333/tour/${id}`)
+                .then(() => {
+                  setProducts((prev) => prev.filter((p) => p.id_tour !== id));
+                  toast.success("Đã xoá tour thành công!");
+                })
+                .catch((err) => {
+                  console.error("Lỗi khi xoá tour:", err);
+                  toast.error("Xoá thất bại!");
+                });
+              toast.dismiss(); // đóng toast xác nhận
+            }}
+          >
+            Xoá
+          </button>
+          <button
+            className="px-2 py-1 bg-gray-300 rounded"
+            onClick={() => toast.dismiss()}
+          >
+            Huỷ
+          </button>
+        </div>
+      </div>,
+      { autoClose: false, closeOnClick: false }
+    );
   };
-
   const handleEdit = (id) => {
     const tour = products.find((p) => p.id_tour === id);
     const updatedTour = { ...tour, title: tour.title + " (Updated)" };
