@@ -1,23 +1,8 @@
-import React, { useState } from "react";
-
-const initialProducts = [
-  {
-    id_tour: 1,
-    title: "Ha Long Bay Cruise",
-    description: "Explore Ha Long Bay.",
-    location: "Ha Long",
-    duration: 2,
-    price: 200.0,
-    max_participants: 20,
-    start_date: "2025-06-01",
-    end_date: "2025-06-03",
-    created_at: "2025-05-01",
-    image: "https://example.com/image.jpg",
-  },
-];
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const ProductManagement = () => {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
   const [newTour, setNewTour] = useState({
     title: "",
     description: "",
@@ -30,6 +15,18 @@ const ProductManagement = () => {
     image: "",
   });
 
+  // Gọi API khi component mount
+  useEffect(() => {
+    axios
+      .get("http://localhost:3333/tours")
+      .then((res) => {
+        setProducts(res.data);
+      })
+      .catch((err) => {
+        console.error("Lỗi khi fetch dữ liệu tours:", err);
+      });
+  }, []);
+
   const handleChange = (e) => {
     setNewTour({ ...newTour, [e.target.name]: e.target.value });
   };
@@ -37,32 +34,53 @@ const ProductManagement = () => {
   const handleAdd = () => {
     const newProduct = {
       ...newTour,
-      id_tour: products.length + 1,
       created_at: new Date().toISOString().split("T")[0],
     };
-    setProducts([...products, newProduct]);
-    setNewTour({
-      title: "",
-      description: "",
-      location: "",
-      duration: "",
-      price: "",
-      max_participants: "",
-      start_date: "",
-      end_date: "",
-      image: "",
-    });
+
+    axios
+      .post("http://localhost:3333/tours", newProduct)
+      .then((res) => {
+        setProducts([...products, res.data]); // hoặc fetch lại toàn bộ list nếu muốn đồng bộ hơn
+        setNewTour({
+          title: "",
+          description: "",
+          location: "",
+          duration: "",
+          price: "",
+          max_participants: "",
+          start_date: "",
+          end_date: "",
+          image: "",
+        });
+      })
+      .catch((err) => {
+        console.error("Lỗi khi thêm tour:", err);
+      });
   };
 
   const handleDelete = (id) => {
-    setProducts(products.filter((p) => p.id_tour !== id));
+    axios
+      .delete(`http://localhost:3333/tours/${id}`)
+      .then(() => {
+        setProducts(products.filter((p) => p.id_tour !== id));
+      })
+      .catch((err) => {
+        console.error("Lỗi khi xoá tour:", err);
+      });
   };
 
   const handleEdit = (id) => {
-    const updated = products.map((p) =>
-      p.id_tour === id ? { ...p, title: p.title + " (Updated)" } : p
-    );
-    setProducts(updated);
+    const tour = products.find((p) => p.id_tour === id);
+    const updatedTour = { ...tour, title: tour.title + " (Updated)" };
+
+    axios
+      .put(`http://localhost:3333/tours/${id}`, updatedTour)
+      .then(() => {
+        setProducts(products.map((p) => (p.id_tour === id ? updatedTour : p)));
+      })
+      .catch((err) => {
+        console.error("Lỗi khi cập nhật tour:", err);
+      });
   };
 
   return (
@@ -117,7 +135,7 @@ const ProductManagement = () => {
             <th className="border p-2">Mô tả</th>
             <th className="border p-2">Địa điểm</th>
             <th className="border p-2">Thời lượng</th>
-            <th className="border p-2">Giá</th>
+            <th className="border p-2">Giá(VND)</th>
             <th className="border p-2">SL tối đa</th>
             <th className="border p-2">Bắt đầu</th>
             <th className="border p-2">Kết thúc</th>
@@ -134,7 +152,13 @@ const ProductManagement = () => {
               <td className="border p-2">{tour.description}</td>
               <td className="border p-2">{tour.location}</td>
               <td className="border p-2">{tour.duration}</td>
-              <td className="border p-2">${tour.price}</td>
+              <td className="border p-2">
+                {new Intl.NumberFormat("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                }).format(tour.price)}
+              </td>
+
               <td className="border p-2">{tour.max_participants}</td>
               <td className="border p-2">{tour.start_date}</td>
               <td className="border p-2">{tour.end_date}</td>
