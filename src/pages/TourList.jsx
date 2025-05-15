@@ -109,7 +109,6 @@ function TourList() {
     }
   };
 
-  // chọn gợi ý
   const handleTitleSuggestionClick = (suggestion) => {
     setSearchTitle(suggestion);
     setShowTitleSuggestions(false);
@@ -153,16 +152,26 @@ function TourList() {
     setMaxPrice(maxPrice);
   };
 
+  const resetFilters = () => {
+    setSearchTitle("");
+    setSearchLocation("");
+    setMinPrice("");
+    setMaxPrice("");
+    setError("");
+    setShowTitleSuggestions(false);
+    setShowLocationSuggestions(false);
+  };
+
   return (
     <div className="container mx-auto py-8">
       <h2 className="text-2xl font-bold mb-4">Danh sách tour</h2>
       
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="relative">
           <input
             type="text"
             placeholder="Tìm theo tên tour..."
-            defaultValue={searchTitle}
+            value={searchTitle}
             onChange={handleTitleInputChange}
             onKeyPress={(e) => handleKeyPress(e, setSearchTitle)}
             className="p-2 border rounded w-full"
@@ -182,7 +191,7 @@ function TourList() {
           )}
           <button 
             onClick={() => {
-              setSearchTitle(document.querySelector('input[placeholder="Tìm theo tên tour..."]').value);
+              setSearchTitle(searchTitle);
               setShowTitleSuggestions(false);
             }}
             className="mt-1 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700 transition w-full"
@@ -195,7 +204,7 @@ function TourList() {
           <input
             type="text"
             placeholder="Tìm theo địa điểm..."
-            defaultValue={searchLocation}
+            value={searchLocation} // Thay defaultValue bằng value để kiểm soát state
             onChange={handleLocationInputChange}
             onKeyPress={(e) => handleKeyPress(e, setSearchLocation)}
             className="p-2 border rounded w-full"
@@ -215,7 +224,7 @@ function TourList() {
           )}
           <button 
             onClick={() => {
-              setSearchLocation(document.querySelector('input[placeholder="Tìm theo địa điểm..."]').value);
+              setSearchLocation(searchLocation);
               setShowLocationSuggestions(false);
             }}
             className="mt-1 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700 transition w-full"
@@ -247,6 +256,15 @@ function TourList() {
             className="mt-1 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700 transition w-full"
           >
             Lọc theo giá
+          </button>
+        </div>
+        
+        <div>
+          <button
+            onClick={resetFilters}
+            className="mt-1 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-700 transition w-full"
+          >
+            Xóa bộ lọc
           </button>
         </div>
       </div>
