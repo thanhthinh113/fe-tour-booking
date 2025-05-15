@@ -15,6 +15,7 @@ function TourList() {
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [hoveredTour, setHoveredTour] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,7 +73,7 @@ function TourList() {
         
         const toursArray = Array.isArray(data) ? data : [data];
         setTours(toursArray);
-        setResultCount(toursArray.length); // Cập nhật số lượng kết quả
+        setResultCount(toursArray.length);
       } catch (error) {
         console.error("Lỗi khi gọi API tour:", error);
         setError("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
@@ -106,7 +107,7 @@ function TourList() {
       const suggestions = tours
         .filter(tour => tour.location.toLowerCase().includes(value.toLowerCase()))
         .map(tour => tour.location);
-      setLocationSuggestions([...new Set(suggestions)]); // Loại bỏ trùng lặp
+      setLocationSuggestions([...new Set(suggestions)]);
       setShowLocationSuggestions(true);
     } else {
       setLocationSuggestions([]);
@@ -292,9 +293,14 @@ function TourList() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative">
         {tours.map((tour) => (
-          <div key={tour.id_tour} className="rounded-lg shadow-lg p-4 bg-white">
+          <div 
+            key={tour.id_tour} 
+            className="rounded-lg shadow-lg p-4 bg-white relative"
+            onMouseEnter={() => setHoveredTour(tour)}
+            onMouseLeave={() => setHoveredTour(null)}
+          >
             <img
               src={tour.image || "https://via.placeholder.com/300x200"}
               alt={tour.title}
@@ -313,6 +319,13 @@ function TourList() {
             >
               Xem chi tiết
             </button>
+            {hoveredTour?.id_tour === tour.id_tour && (
+              <div className="absolute z-10 bg-white p-2 border rounded shadow-lg mt-2 w-48">
+                <p><strong>Địa điểm:</strong> {tour.location}</p>
+                <p><strong>Thời gian:</strong> {tour.duration} ngày</p>
+                <p><strong>Giá:</strong> {tour.price?.toLocaleString()} VNĐ</p>
+              </div>
+            )}
           </div>
         ))}
       </div>
