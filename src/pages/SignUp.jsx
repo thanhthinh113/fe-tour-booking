@@ -102,7 +102,7 @@ const SignUp = () => {
   };
 
   const handleLoginRedirect = () => {
-    navigate("/");
+    navigate("/login");
   };
 
   return (
