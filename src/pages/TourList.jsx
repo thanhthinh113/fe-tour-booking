@@ -16,6 +16,8 @@ function TourList() {
   const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [hoveredTour, setHoveredTour] = useState(null);
+  const [sortType, setSortType] = useState("default");
+  const [sortOrder, setSortOrder] = useState("asc");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,8 +74,21 @@ function TourList() {
         }
         
         const toursArray = Array.isArray(data) ? data : [data];
-        setTours(toursArray);
-        setResultCount(toursArray.length);
+        // Sắp xếp mảng trước khi set
+        const sortedTours = [...toursArray].sort((a, b) => {
+          if (sortType === "price") {
+            return sortOrder === "asc" 
+              ? a.price - b.price 
+              : b.price - a.price;
+          } else if (sortType === "duration") {
+            return sortOrder === "asc" 
+              ? a.duration - b.duration 
+              : b.duration - a.duration;
+          }
+          return 0;
+        });
+        setTours(sortedTours);
+        setResultCount(sortedTours.length);
       } catch (error) {
         console.error("Lỗi khi gọi API tour:", error);
         setError("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
@@ -85,7 +100,7 @@ function TourList() {
     };
 
     fetchTours();
-  }, [searchTitle, searchLocation, minPrice, maxPrice]);
+  }, [searchTitle, searchLocation, minPrice, maxPrice, sortType, sortOrder]);
 
   const handleTitleInputChange = (e) => {
     const value = e.target.value;
@@ -166,12 +181,36 @@ function TourList() {
     setError("");
     setShowTitleSuggestions(false);
     setShowLocationSuggestions(false);
+    setSortType("default");
+    setSortOrder("asc");
+  };
+
+  const handleSortChange = (e) => {
+    const [type, order] = e.target.value.split("-");
+    setSortType(type);
+    setSortOrder(order);
   };
 
   return (
     <div className="container mx-auto py-8">
       <h2 className="text-2xl font-bold mb-4">Danh sách tour</h2>
-      
+      <div className="mb-2" style={{ marginBottom: '10px' }}>
+        <div className="ml-310 px-3 py-1 rounded transition w-full">
+          <label className="mr-2">Sắp xếp theo:</label>
+          <select
+            value={`${sortType}-${sortOrder}`}
+            onChange={handleSortChange}
+            className="p-2 border rounded"
+          >
+            <option value="default-asc">Mặc định</option>
+            <option value="price-asc">Giá: Tăng dần</option>
+            <option value="price-desc">Giá: Giảm dần</option>
+            <option value="duration-asc">Thời gian: Tăng dần</option>
+            <option value="duration-desc">Thời gian: Giảm dần</option>
+          </select>
+        </div>
+      </div>
+
       <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="relative">
           <input
@@ -306,7 +345,17 @@ function TourList() {
               alt={tour.title}
               className="w-full h-48 object-cover mb-2 rounded"
             />
-            <h3 className="font-semibold text-lg">{tour.title}</h3>
+            <h3 className="font-semibold text-lg flex items-center">
+              {tour.title}
+              <span className="ml-2">
+                {sortType === "price" && (
+                  sortOrder === "asc" ? "↑" : "↓"
+                )}
+                {sortType === "duration" && (
+                  sortOrder === "asc" ? "↑" : "↓"
+                )}
+              </span>
+            </h3>
             <p className="text-sm text-gray-600 line-clamp-2">{tour.description}</p>
             <p className="text-sm text-gray-500">Địa điểm: {tour.location}</p>
             <p className="text-sm text-gray-500">Thời gian: {tour.duration} ngày</p>
