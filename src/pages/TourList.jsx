@@ -9,6 +9,7 @@ function TourList() {
   const [maxPrice, setMaxPrice] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resultCount, setResultCount] = useState(0);
   
   const [titleSuggestions, setTitleSuggestions] = useState([]);
   const [locationSuggestions, setLocationSuggestions] = useState([]);
@@ -54,6 +55,7 @@ function TourList() {
         if (!response.ok) {
           if (response.status === 404) {
             setTours([]);
+            setResultCount(0);
             return;
           }
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -64,15 +66,18 @@ function TourList() {
         
         if (!data) {
           setTours([]);
+          setResultCount(0);
           return;
         }
         
         const toursArray = Array.isArray(data) ? data : [data];
         setTours(toursArray);
+        setResultCount(toursArray.length); // Cập nhật số lượng kết quả
       } catch (error) {
         console.error("Lỗi khi gọi API tour:", error);
         setError("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
         setTours([]);
+        setResultCount(0);
       } finally {
         setLoading(false);
       }
@@ -204,7 +209,7 @@ function TourList() {
           <input
             type="text"
             placeholder="Tìm theo địa điểm..."
-            value={searchLocation} // Thay defaultValue bằng value để kiểm soát state
+            value={searchLocation}
             onChange={handleLocationInputChange}
             onKeyPress={(e) => handleKeyPress(e, setSearchLocation)}
             className="p-2 border rounded w-full"
@@ -268,6 +273,12 @@ function TourList() {
           </button>
         </div>
       </div>
+
+      {!loading && !error && (
+        <div className="mb-4 text-gray-600">
+          Đã tìm thấy {resultCount} tour
+        </div>
+      )}
 
       {loading && (
         <div className="text-center text-gray-500 my-8">
