@@ -30,33 +30,38 @@ const ProductManagement = () => {
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "image" && files) {
-      setNewTour({ ...newTour, [name]: files[0] });
+      setNewTour({ ...newTour, image: files[0] });
     } else {
       setNewTour({ ...newTour, [name]: value });
     }
   };
 
-  const handleAdd = () => {
-    const formData = new FormData();
-    const { image, ...tourDataWithoutImage } = newTour;
-    const tourData = {
-      ...tourDataWithoutImage,
-      created_at: new Date().toISOString().split("T")[0],
-    };
+  const formatDate = (dateStr) => {
+    return new Date(dateStr).toISOString().split("T")[0]; // YYYY-MM-DD
+  };
 
-    formData.append("tour", JSON.stringify(tourData));
-    if (newTour.image) {
-      formData.append("file", newTour.image);
-    } else {
+  const handleAdd = () => {
+    if (!newTour.image) {
       toast.error("Vui lòng chọn ảnh!");
       return;
     }
 
+    const formData = new FormData();
+    const tourData = {
+      ...newTour,
+      start_date: formatDate(newTour.start_date),
+      end_date: formatDate(newTour.end_date),
+      created_at: formatDate(new Date()),
+    };
+
+    const { image, ...tourWithoutImage } = tourData;
+
+    formData.append("tour", JSON.stringify(tourWithoutImage));
+    formData.append("file", image);
+
     axios
       .post("http://localhost:3333/tour/with-image", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       })
       .then((res) => {
         setProducts([...products, res.data]);
@@ -74,10 +79,8 @@ const ProductManagement = () => {
         toast.success("Thêm tour thành công!");
       })
       .catch((err) => {
-        console.error("Lỗi khi thêm tour:", err.response?.data || err.message);
-        toast.error(
-          "Thêm tour thất bại: " + (err.response?.data || err.message)
-        );
+        console.error("Lỗi khi thêm tour:", err);
+        toast.error("Thêm tour thất bại!");
       });
   };
 
@@ -95,10 +98,7 @@ const ProductManagement = () => {
                   setProducts((prev) => prev.filter((p) => p.id_tour !== id));
                   toast.success("Đã xoá tour thành công!");
                 })
-                .catch((err) => {
-                  console.error("Lỗi khi xoá tour:", err);
-                  toast.error("Xoá thất bại!");
-                });
+                .catch(() => toast.error("Xoá thất bại!"));
               toast.dismiss();
             }}
           >
@@ -118,15 +118,24 @@ const ProductManagement = () => {
 
   const handleEdit = (id) => {
     const tour = products.find((p) => p.id_tour === id);
-    const updatedTour = { ...tour, title: tour.title + " (Updated)" };
+    const updatedTour = {
+      ...tour,
+      title: tour.title + " (Updated)",
+      start_date: formatDate(tour.start_date),
+      end_date: formatDate(tour.end_date),
+    };
 
     axios
       .put(`http://localhost:3333/tours/${id}`, updatedTour)
       .then(() => {
-        setProducts(products.map((p) => (p.id_tour === id ? updatedTour : p)));
+        setProducts((prev) =>
+          prev.map((p) => (p.id_tour === id ? updatedTour : p))
+        );
+        toast.success("Cập nhật thành công!");
       })
       .catch((err) => {
-        console.error("Lỗi khi cập nhật tour:", err);
+        console.error("Lỗi cập nhật:", err);
+        toast.error("Cập nhật thất bại!");
       });
   };
 
@@ -188,11 +197,10 @@ const ProductManagement = () => {
             <th className="border p-2">Mô tả</th>
             <th className="border p-2">Địa điểm</th>
             <th className="border p-2">Thời lượng</th>
-            <th className="border p-2">Giá(VND)</th>
+            <th className="border p-2">Giá (VND)</th>
             <th className="border p-2">SL tối đa</th>
             <th className="border p-2">Bắt đầu</th>
             <th className="border p-2">Kết thúc</th>
-            <th className="border p-2">Tạo lúc</th>
             <th className="border p-2">Ảnh</th>
             <th className="border p-2">Hành động</th>
           </tr>
@@ -212,9 +220,8 @@ const ProductManagement = () => {
                 }).format(tour.price)}
               </td>
               <td className="border p-2">{tour.max_participants}</td>
-              <td className="border p-2">{tour.start_date}</td>
-              <td className="border p-2">{tour.end_date}</td>
-              <td className="border p-2">{tour.created_at}</td>
+              <td className="border p-2">{formatDate(tour.start_date)}</td>
+              <td className="border p-2">{formatDate(tour.end_date)}</td>
               <td className="border p-2">
                 <img
                   src={tour.image}
