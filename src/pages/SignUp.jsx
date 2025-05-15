@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const SignUp = () => {
   const [fullName, setFullName] = useState("");
@@ -10,17 +12,49 @@ const SignUp = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Hàm kiểm tra định dạng email
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Hàm kiểm tra số điện thoại
+  const isValidPhone = (phone) => {
+    const phoneRegex = /^0\d{9}$/;
+    return phoneRegex.test(phone);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
+    // Kiểm tra các trường bắt buộc
     if (!fullName || !email || !password || !confirmPassword || !phone) {
-      setError("Please fill in all fields.");
+      setError("Vui lòng điền đầy đủ tất cả các trường.");
       return;
     }
 
+    // Kiểm tra định dạng số điện thoại
+    if (!isValidPhone(phone)) {
+      setError("Số điện thoại phải có 10 số và bắt đầu bằng 0.");
+      return;
+    }
+
+    // Kiểm tra định dạng email
+    if (!isValidEmail(email)) {
+      setError("Vui lòng nhập email hợp lệ.");
+      return;
+    }
+
+    // Kiểm tra độ dài mật khẩu
+    if (password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự.");
+      return;
+    }
+
+    // Kiểm tra mật khẩu khớp
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError("Mật khẩu xác nhận không khớp.");
       return;
     }
 
@@ -45,13 +79,25 @@ const SignUp = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || "Signup failed. Please try again.");
+        throw new Error(errorText || "Đăng ký thất bại. Vui lòng thử lại.");
       }
 
-      alert("Sign up successful!");
-      navigate("/");
+      // Hiển thị toast thông báo thành công
+      toast.success("Đăng ký thành công!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      // Chuyển hướng sau 3 giây để người dùng thấy toast
+      setTimeout(() => {
+        navigate("/");
+      }, 3000);
     } catch (error) {
-      setError(error.message || "Signup failed. Please try again.");
+      setError(error.message || "Đăng ký thất bại. Vui lòng thử lại.");
     }
   };
 
@@ -63,7 +109,7 @@ const SignUp = () => {
     <div className="bg-gray-100 flex items-center justify-center min-h-screen">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          Travel Tour Sign Up
+          Đăng Ký Travel Tour
         </h2>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleSubmit}>
@@ -72,7 +118,7 @@ const SignUp = () => {
               htmlFor="fullName"
               className="block text-gray-700 font-medium mb-2"
             >
-              Full Name
+              Họ và Tên
             </label>
             <input
               type="text"
@@ -80,16 +126,13 @@ const SignUp = () => {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your full name"
+              placeholder="Nhập họ và tên"
               required
             />
           </div>
           <div className="mb-4">
-            <label
-              htmlFor="phone"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Phone
+            <label for="phone" className="block text-gray-700 font-medium mb-2">
+              Số Điện Thoại
             </label>
             <input
               type="text"
@@ -97,7 +140,7 @@ const SignUp = () => {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your phone number"
+              placeholder="Nhập số điện thoại"
               required
             />
           </div>
@@ -114,7 +157,7 @@ const SignUp = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your email"
+              placeholder="Nhập email"
               required
             />
           </div>
@@ -123,7 +166,7 @@ const SignUp = () => {
               htmlFor="password"
               className="block text-gray-700 font-medium mb-2"
             >
-              Password
+              Mật Khẩu
             </label>
             <input
               type="password"
@@ -131,7 +174,7 @@ const SignUp = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your password"
+              placeholder="Nhập mật khẩu"
               required
             />
           </div>
@@ -140,7 +183,7 @@ const SignUp = () => {
               htmlFor="confirmPassword"
               className="block text-gray-700 font-medium mb-2"
             >
-              Confirm Password
+              Xác Nhận Mật Khẩu
             </label>
             <input
               type="password"
@@ -148,7 +191,7 @@ const SignUp = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Confirm your password"
+              placeholder="Xác nhận mật khẩu"
               required
             />
           </div>
@@ -156,19 +199,20 @@ const SignUp = () => {
             type="submit"
             className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-300"
           >
-            Sign Up
+            Đăng Ký
           </button>
         </form>
         <p className="text-center text-gray-600 mt-4">
-          Already have an account?{" "}
+          Đã có tài khoản?{" "}
           <span
             onClick={handleLoginRedirect}
             className="text-blue-500 hover:underline cursor-pointer"
           >
-            Log in
+            Đăng nhập
           </span>
         </p>
       </div>
+      <ToastContainer />
     </div>
   );
 };
