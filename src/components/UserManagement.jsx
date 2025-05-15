@@ -1,80 +1,119 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
+import { toast } from "react-toastify";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]); // Danh sách đã lọc
   const [searchTerm, setSearchTerm] = useState("");
-
   const { token } = useAuth();
 
-  // Fetch users from the backend
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get(
-          "http://customer.phamhuuthuan.io.vn:8081/customer/customerlist",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setUsers(response.data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
+  const BASE_URL = "http://customer.phamhuuthuan.io.vn:8081/customer";
 
-    if (token) {
-      fetchUsers();
+  // Fetch all users
+  const fetchAllUsers = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/customerlist`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUsers(response.data);
+      setFilteredUsers(response.data); // Ban đầu, danh sách đã lọc giống danh sách gốc
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setUsers([]);
+      setFilteredUsers([]);
     }
+  };
+
+  // Handle search on frontend
+  const handleSearch = () => {
+    if (!searchTerm) {
+      setFilteredUsers(users); // Nếu không có từ khóa, hiển thị toàn bộ danh sách
+      return;
+    }
+
+    const searchTermLower = searchTerm.toLowerCase();
+    const filtered = users.filter(
+      (user) =>
+        user.name?.toLowerCase().includes(searchTermLower) ||
+        user.email?.toLowerCase().includes(searchTermLower) ||
+        user.phone?.toLowerCase().includes(searchTermLower)
+    );
+    setFilteredUsers(filtered);
+  };
+
+  useEffect(() => {
+    fetchAllUsers();
   }, [token]);
 
+  // Update filtered users whenever searchTerm changes
+  useEffect(() => {
+    handleSearch();
+  }, [searchTerm, users]);
+
   // Delete user
-  const handleDeleteUser = async (id) => {
-    try {
-      const response = await axios.delete(
-        `http://customer.phamhuuthuan.io.vn:8081/customer/delete/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
 
-      if (response.status === 200) {
-        setUsers(users.filter((user) => user.id !== id));
+  const handleDeleteUser = (id) => {
+    const toastId = toast.info(
+      <div>
+        <p>Bạn có chắc chắn muốn xoá người dùng này?</p>
+        <div className="flex justify-end mt-2 space-x-2">
+          <button
+            className="px-2 py-1 bg-red-500 text-white rounded"
+            onClick={async () => {
+              try {
+                const response = await axios.delete(
+                  `${BASE_URL}/delete/${id}`,
+                  {
+                    headers: { Authorization: `Bearer ${token}` },
+                  }
+                );
+                if (response.status === 204) {
+                  const updatedUsers = users.filter((user) => user.id !== id);
+                  setUsers(updatedUsers);
+                  setFilteredUsers(updatedUsers);
+                  toast.success("Đã xoá người dùng thành công!", {
+                    autoClose: 5000,
+                  });
+                } else {
+                  toast.error("Xoá người dùng thất bại!");
+                }
+              } catch (error) {
+                console.error("Error deleting user:", error);
+                toast.error("Đã xảy ra lỗi khi xoá!");
+              }
+              toast.dismiss(toastId); // 🔥 chỉ tắt toast xác nhận
+            }}
+          >
+            Xoá
+          </button>
+          <button
+            className="px-2 py-1 bg-gray-300 rounded"
+            onClick={() => toast.dismiss(toastId)}
+          >
+            Huỷ
+          </button>
+        </div>
+      </div>,
+      {
+        autoClose: false,
+        closeOnClick: false,
       }
-    } catch (error) {
-      console.error("Error deleting user:", error);
-    }
+    );
   };
-
-  // Handle search term change
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  // Filter users based on the search term
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phone.includes(searchTerm)
-  );
 
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Quản lý người dùng</h2>
 
       {/* Search bar */}
-      <div className="mb-4">
+      <div className="mb-4 flex gap-2">
         <input
           type="text"
-          placeholder="Search by name, email, or phone"
+          placeholder="Search by name, email or phone"
           value={searchTerm}
-          onChange={handleSearchChange}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="border p-2 rounded w-full"
         />
       </div>
@@ -96,7 +135,9 @@ const UserManagement = () => {
           {filteredUsers.length === 0 ? (
             <tr>
               <td colSpan="7" className="text-center py-4">
-                No users found
+                {users.length === 0
+                  ? "Loading..."
+                  : "Không tìm thấy người dùng"}
               </td>
             </tr>
           ) : (
