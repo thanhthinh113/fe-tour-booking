@@ -9,9 +9,26 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // Email validation regex
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    // Validate email and password
+    if (!isValidEmail(email)) {
+      setError("Vui lòng nhập email hợp lệ.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự.");
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -27,7 +44,9 @@ const Login = () => {
 
       if (!response.ok) {
         const errorData = await response.text();
-        throw new Error(errorData || "Login failed. Please try again.");
+        throw new Error(
+          errorData || "Đăng nhập không thành công. Vui lòng thử lại."
+        );
       }
 
       const data = await response.json();
@@ -36,11 +55,11 @@ const Login = () => {
       // Wait for login process to complete
       const loginSuccess = await login(data.accessToken);
       if (loginSuccess) {
-        // Kiểm tra vai trò của người dùng (giả sử bạn lưu vai trò người dùng trong `data.role`)
+        // Check user role
         if (data.role === "ADMIN") {
-          navigate("/admin"); // Chuyển hướng đến trang Admin nếu người dùng là ADMIN
+          navigate("/admin");
         } else {
-          navigate("/"); // Nếu không phải admin, chuyển hướng về trang chủ
+          navigate("/");
         }
       } else {
         throw new Error("Failed to fetch user profile");
@@ -49,8 +68,8 @@ const Login = () => {
       setError(err.message || "Login failed. Please try again.");
     }
   };
+
   const handleGoogleLogin = () => {
-    // Chuyển hướng đến endpoint đăng nhập Google
     window.location.href =
       "http://customer.phamhuuthuan.io.vn:8081/oauth2/authorization/google";
   };
