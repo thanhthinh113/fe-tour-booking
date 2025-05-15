@@ -9,9 +9,13 @@ function TourList() {
   const [maxPrice, setMaxPrice] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  const [titleSuggestions, setTitleSuggestions] = useState([]);
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const navigate = useNavigate();
 
-  // Gọi API khi component mount hoặc khi các filter thay đổi
   useEffect(() => {
     const fetchTours = async () => {
       setLoading(true);
@@ -19,17 +23,13 @@ function TourList() {
       try {
         let url = "http://localhost:3333/tours";
         
-        // Nếu có tìm kiếm theo địa điểm
         if (searchLocation) {
           url = `http://localhost:3333/tours/location/${encodeURIComponent(searchLocation)}`;
         }
-        // Nếu có tìm kiếm theo tiêu đề
         else if (searchTitle) {
           url = `http://localhost:3333/tours/title/${encodeURIComponent(searchTitle)}`;
         }
-        // Nếu có lọc theo giá
         else if (minPrice !== "" && maxPrice !== "") {
-          // Kiểm tra giá trị hợp lệ
           const min = parseFloat(minPrice);
           const max = parseFloat(maxPrice);
           
@@ -62,13 +62,11 @@ function TourList() {
         const data = await response.json();
         console.log("Received data:", data);
         
-        // Kiểm tra nếu data là null hoặc undefined
         if (!data) {
           setTours([]);
           return;
         }
         
-        // Đảm bảo data là một mảng
         const toursArray = Array.isArray(data) ? data : [data];
         setTours(toursArray);
       } catch (error) {
@@ -83,25 +81,61 @@ function TourList() {
     fetchTours();
   }, [searchTitle, searchLocation, minPrice, maxPrice]);
 
-  // Hàm xử lý khi người dùng nhấn Enter trong ô tìm kiếm
-  const handleKeyPress = (e, setter) => {
-    if (e.key === 'Enter') {
-      setter(e.target.value);
+  const handleTitleInputChange = (e) => {
+    const value = e.target.value;
+    if (value) {
+      const suggestions = tours
+        .filter(tour => tour.title.toLowerCase().includes(value.toLowerCase()))
+        .map(tour => tour.title);
+      setTitleSuggestions([...new Set(suggestions)]); 
+      setShowTitleSuggestions(true);
+    } else {
+      setTitleSuggestions([]);
+      setShowTitleSuggestions(false);
     }
   };
 
-  // Hàm xử lý khi người dùng thay đổi giá trị giá
+  const handleLocationInputChange = (e) => {
+    const value = e.target.value;
+    if (value) {
+      const suggestions = tours
+        .filter(tour => tour.location.toLowerCase().includes(value.toLowerCase()))
+        .map(tour => tour.location);
+      setLocationSuggestions([...new Set(suggestions)]); // Loại bỏ trùng lặp
+      setShowLocationSuggestions(true);
+    } else {
+      setLocationSuggestions([]);
+      setShowLocationSuggestions(false);
+    }
+  };
+
+  // chọn gợi ý
+  const handleTitleSuggestionClick = (suggestion) => {
+    setSearchTitle(suggestion);
+    setShowTitleSuggestions(false);
+  };
+
+  const handleLocationSuggestionClick = (suggestion) => {
+    setSearchLocation(suggestion);
+    setShowLocationSuggestions(false);
+  };
+
+  const handleKeyPress = (e, setter) => {
+    if (e.key === 'Enter') {
+      setter(e.target.value);
+      setShowTitleSuggestions(false);
+      setShowLocationSuggestions(false);
+    }
+  };
+
   const handlePriceChange = (e, setter) => {
     const value = e.target.value;
-    // Chỉ cho phép số và dấu chấm
     if (value === "" || /^\d*\.?\d*$/.test(value)) {
       setter(value);
     }
   };
 
-  // Hàm xử lý khi người dùng nhấn nút tìm kiếm theo giá
   const handlePriceSearch = () => {
-    // Kiểm tra giá trị hợp lệ
     const min = parseFloat(minPrice);
     const max = parseFloat(maxPrice);
     
@@ -115,7 +149,6 @@ function TourList() {
       return;
     }
     
-    // Cập nhật state để trigger useEffect
     setMinPrice(minPrice);
     setMaxPrice(maxPrice);
   };
@@ -124,34 +157,67 @@ function TourList() {
     <div className="container mx-auto py-8">
       <h2 className="text-2xl font-bold mb-4">Danh sách tour</h2>
       
-      {/* Search and Filter Section */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div>
+        <div className="relative">
           <input
             type="text"
             placeholder="Tìm theo tên tour..."
             defaultValue={searchTitle}
+            onChange={handleTitleInputChange}
             onKeyPress={(e) => handleKeyPress(e, setSearchTitle)}
             className="p-2 border rounded w-full"
           />
+          {showTitleSuggestions && titleSuggestions.length > 0 && (
+            <ul className="absolute z-10 w-full bg-white border rounded shadow-lg max-h-40 overflow-y-auto">
+              {titleSuggestions.map((suggestion, index) => (
+                <li
+                  key={index}
+                  onClick={() => handleTitleSuggestionClick(suggestion)}
+                  className="p-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  {suggestion}
+                </li>
+              ))}
+            </ul>
+          )}
           <button 
-            onClick={() => setSearchTitle(document.querySelector('input[placeholder="Tìm theo tên tour..."]').value)}
+            onClick={() => {
+              setSearchTitle(document.querySelector('input[placeholder="Tìm theo tên tour..."]').value);
+              setShowTitleSuggestions(false);
+            }}
             className="mt-1 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700 transition w-full"
           >
             Tìm kiếm
           </button>
         </div>
         
-        <div>
+        <div className="relative">
           <input
             type="text"
             placeholder="Tìm theo địa điểm..."
             defaultValue={searchLocation}
+            onChange={handleLocationInputChange}
             onKeyPress={(e) => handleKeyPress(e, setSearchLocation)}
             className="p-2 border rounded w-full"
           />
+          {showLocationSuggestions && locationSuggestions.length > 0 && (
+            <ul className="absolute z-10 w-full bg-white border rounded shadow-lg max-h-40 overflow-y-auto">
+              {locationSuggestions.map((suggestion, index) => (
+                <li
+                  key={index}
+                  onClick={() => handleLocationSuggestionClick(suggestion)}
+                  className="p-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  {suggestion}
+                </li>
+              ))}
+            </ul>
+          )}
           <button 
-            onClick={() => setSearchLocation(document.querySelector('input[placeholder="Tìm theo địa điểm..."]').value)}
+            onClick={() => {
+              setSearchLocation(document.querySelector('input[placeholder="Tìm theo địa điểm..."]').value);
+              setShowLocationSuggestions(false);
+            }}
             className="mt-1 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700 transition w-full"
           >
             Tìm kiếm
@@ -185,7 +251,6 @@ function TourList() {
         </div>
       </div>
 
-      {/* Loading and Error Messages */}
       {loading && (
         <div className="text-center text-gray-500 my-8">
           Đang tải dữ liệu...
@@ -198,7 +263,6 @@ function TourList() {
         </div>
       )}
 
-      {/* Tours Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {tours.map((tour) => (
           <div key={tour.id_tour} className="rounded-lg shadow-lg p-4 bg-white">
@@ -224,7 +288,6 @@ function TourList() {
         ))}
       </div>
 
-      {/* No Results Message */}
       {!loading && !error && tours.length === 0 && (
         <div className="text-center text-gray-500 mt-8">
           Không tìm thấy tour phù hợp với tiêu chí tìm kiếm

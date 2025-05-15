@@ -15,6 +15,7 @@ function Home() {
       script.async = true;
       document.body.appendChild(script);
     }
+    
 
     if (!document.querySelector("df-messenger")) {
       const dfMessenger = document.createElement("df-messenger");
