@@ -110,7 +110,7 @@ function PaymentForm() {
 
       console.log('Sending payment request:', paymentRequest);
 
-      const response = await fetch('http://localhost:8086/api/payments', {
+      const response = await fetch('http://localhost:5555/booking/66/payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -243,6 +243,19 @@ function PaymentForm() {
                   <img src="/vnpay-logo.png" alt="VNPay" className="h-6 mr-2" />
                 )}
                 Thanh toán qua VNPay
+              </button>
+
+              <button
+                onClick={() => handlePayment('VNPAY')}
+                disabled={processingPayment}
+                className="w-full bg-pink-500 text-white px-6 py-3 rounded-lg hover:bg-pink-400 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {processingPayment ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                ) : (
+                  <img src="/momo-logo.png" alt="Momo" className="h-6 mr-2" />
+                )}
+                Thanh toán qua Momo
               </button>
 
               <button

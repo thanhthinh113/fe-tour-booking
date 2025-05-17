@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
-import hinh1 from "../assets/hinh1.png";
 
 function TourDetail() {
   const { id } = useParams();
