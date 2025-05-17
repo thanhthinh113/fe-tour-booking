@@ -24,9 +24,9 @@ import React, { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import UserManagement from "../components/UserManagement";
 import ProductManagement from "../components/ProductManagement";
-import Revenue from "../components/Revenue";
+import Booking from "../components/Booking";
 
-const tabs = ["Users", "Products", "Revenue"];
+const tabs = ["Users", "Products", "Bookings"];
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("Users");
@@ -52,7 +52,7 @@ const Admin = () => {
           <h2 className="text-xl font-semibold mb-4">{activeTab}</h2>
           {activeTab === "Users" && <UserManagement />}
           {activeTab === "Products" && <ProductManagement />}
-          {activeTab === "Revenue" && <Revenue />}
+          {activeTab === "Bookings" && <Booking />}
         </main>
       </div>
     </div>

@@ -140,7 +140,7 @@ const ProductManagement = () => {
   };
 
   return (
-    <div>
+    <div className="bg-white p-6 rounded shadow">
       <h2 className="text-xl font-bold mb-4">Quản lý Tour</h2>
       <div className="grid grid-cols-2 gap-4 mb-6">
         {[
