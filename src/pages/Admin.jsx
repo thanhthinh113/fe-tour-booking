@@ -25,8 +25,9 @@ import Sidebar from "../components/Sidebar";
 import UserManagement from "../components/UserManagement";
 import ProductManagement from "../components/ProductManagement";
 import Booking from "../components/Booking";
+import Statistical from "../components/Statistical";
 
-const tabs = ["Users", "Products", "Bookings"];
+const tabs = ["Users", "Products", "Bookings","Statistical"];
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("Users");
@@ -53,6 +54,7 @@ const Admin = () => {
           {activeTab === "Users" && <UserManagement />}
           {activeTab === "Products" && <ProductManagement />}
           {activeTab === "Bookings" && <Booking />}
+          {activeTab === "Statistical" && <Statistical />}
         </main>
       </div>
     </div>

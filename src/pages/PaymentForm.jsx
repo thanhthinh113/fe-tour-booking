@@ -53,9 +53,7 @@ function PaymentForm() {
       }
 
       // Convert total_price to number if it's a string
-      const amount = typeof booking.total_price === 'string' 
-        ? parseFloat(booking.total_price) 
-        : booking.total_price;
+      // (Removed unused 'amount' variable)
 
       // Handle COD payment separately
       if (paymentMethod === 'COD') {
@@ -99,24 +97,21 @@ function PaymentForm() {
       }
 
       // Handle online payment (VNPAY)
-      const paymentRequest = {
-        orderId: id,
-        amount: amount,
-        paymentMethod: 'VNPAY',
-        returnUrl: `${window.location.origin}/payment/callback`,
-        customerEmail: booking.user_email || 'customer@example.com',
-        description: `Thanh toán đặt tour ${booking.tour_title || id}`
-      };
+   const paymentRequest = {
+  paymentMethod: paymentMethod,
+  customerEmail: booking.user_email || 'customer@example.com',
+};
+
 
       console.log('Sending payment request:', paymentRequest);
+      console.log('Booking ID:', id);
 
-      const response = await fetch('http://localhost:5555/booking/66/payment', {
+      const response = await fetch(`http://localhost:5555/booking/${id}/payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        credentials: 'include',
         body: JSON.stringify(paymentRequest)
       });
 
@@ -245,18 +240,19 @@ function PaymentForm() {
                 Thanh toán qua VNPay
               </button>
 
-              <button
-                onClick={() => handlePayment('VNPAY')}
-                disabled={processingPayment}
-                className="w-full bg-pink-500 text-white px-6 py-3 rounded-lg hover:bg-pink-400 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
-              >
-                {processingPayment ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                ) : (
-                  <img src="/momo-logo.png" alt="Momo" className="h-6 mr-2" />
-                )}
-                Thanh toán qua Momo
-              </button>
+           <button
+            onClick={() => handlePayment('MOMO')}
+            disabled={processingPayment}
+            className="w-full bg-pink-500 text-white px-6 py-3 rounded-lg hover:bg-pink-400 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+          >
+        {processingPayment ? (
+    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+  ) : (
+    <img src="/momo-logo.png" alt="Momo" className="h-6 mr-2" />
+  )}
+  Thanh toán qua Momo
+</button>
+
 
               <button
                 onClick={() => handlePayment('COD')}
