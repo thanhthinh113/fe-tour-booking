@@ -111,7 +111,7 @@ const UserManagement = () => {
       <div className="mb-4 flex gap-2">
         <input
           type="text"
-          placeholder="Search by name, email or phone"
+          placeholder="Tìm kiếm theo tên, email hoặc số điện thoại"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="border p-2 rounded w-full"

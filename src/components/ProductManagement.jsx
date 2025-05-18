@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
+  const [searchLocation, setSearchLocation] = useState(""); // State tìm kiếm theo địa điểm
   const [newTour, setNewTour] = useState({
     title: "",
     description: "",
@@ -37,6 +38,7 @@ const ProductManagement = () => {
   };
 
   const formatDate = (dateStr) => {
+    if (!dateStr) return "";
     return new Date(dateStr).toISOString().split("T")[0]; // YYYY-MM-DD
   };
 
@@ -118,6 +120,8 @@ const ProductManagement = () => {
 
   const handleEdit = (id) => {
     const tour = products.find((p) => p.id_tour === id);
+    if (!tour) return;
+
     const updatedTour = {
       ...tour,
       title: tour.title + " (Updated)",
@@ -139,9 +143,32 @@ const ProductManagement = () => {
       });
   };
 
+  // Xử lý thay đổi ô tìm kiếm địa điểm
+  const handleSearchChange = (e) => {
+    setSearchLocation(e.target.value);
+  };
+
+  // Lọc danh sách tour theo từ khóa tìm kiếm địa điểm (không phân biệt hoa thường)
+  const filteredProducts = products.filter((tour) =>
+    tour.location.toLowerCase().includes(searchLocation.toLowerCase())
+  );
+
   return (
     <div className="bg-white p-6 rounded shadow">
       <h2 className="text-xl font-bold mb-4">Quản lý Tour</h2>
+
+      {/* Ô tìm kiếm theo địa điểm */}
+      <div className="mb-4 flex gap-2">
+        <input
+          type="text"
+          placeholder="Tìm theo địa điểm"
+          value={searchLocation}
+          onChange={handleSearchChange}
+          className="border p-2 rounded w-full"
+        />
+      </div>
+
+      {/* Form thêm tour */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         {[
           ["title", "Tiêu đề"],
@@ -189,6 +216,7 @@ const ProductManagement = () => {
         Thêm Tour
       </button>
 
+      {/* Bảng hiển thị danh sách tour */}
       <table className="min-w-full bg-white border border-gray-300 text-sm">
         <thead className="bg-gray-100 text-left">
           <tr>
@@ -206,7 +234,7 @@ const ProductManagement = () => {
           </tr>
         </thead>
         <tbody>
-          {products.map((tour) => (
+          {filteredProducts.map((tour) => (
             <tr key={tour.id_tour}>
               <td className="border p-2">{tour.id_tour}</td>
               <td className="border p-2">{tour.title}</td>
