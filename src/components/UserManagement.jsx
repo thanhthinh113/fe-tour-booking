@@ -9,7 +9,7 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { token } = useAuth();
 
-  const BASE_URL = "http://customer.phamhuuthuan.io.vn:8081/customer";
+  const BASE_URL = "http://tour.phamhuuthuan.io.vn:8080/customer";
 
   // Fetch all users
   const fetchAllUsers = async () => {

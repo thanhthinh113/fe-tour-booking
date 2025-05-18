@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8080/api"; // địa chỉ khi chạy API-GETWAY trong dev
+const API_BASE_URL = "http://tour.phamhuuthuan.io.vn:8080/api"; // địa chỉ của API gateway
 
 export const getAllTours = async () => {
   const response = await fetch(`${API_BASE_URL}/tours`);

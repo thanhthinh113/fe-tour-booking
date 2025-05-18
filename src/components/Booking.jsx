@@ -9,7 +9,7 @@ const Booking = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const { token } = useAuth();
 
-  const BASE_URL = "http://customer.phamhuuthuan.io.vn:8082";
+  const BASE_URL = "http://tour.phamhuuthuan.io.vn:8080";
 
   const fetchAllBookings = async () => {
     try {

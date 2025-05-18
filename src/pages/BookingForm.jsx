@@ -36,7 +36,7 @@ function BookingForm() {
     if (!authLoading && isAuthenticated && user) {
       const fetchTourDetail = async () => {
         try {
-          const response = await fetch(`http://localhost:3333/tour/${id}`);
+          const response = await fetch(`http://tour.phamhuuthuan.io.vn:8080/tour/${id}`);
           if (!response.ok) {
             throw new Error("Tour không tồn tại");
           }
@@ -107,7 +107,7 @@ function BookingForm() {
 
       console.log("Sending booking request:", requestData);
 
-      const response = await fetch("http://localhost:5555/booking", {
+      const response = await fetch("http://tour.phamhuuthuan.io.vn:8080/booking", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -2,12 +2,19 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [showPaymentFrame, setShowPaymentFrame] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState('');
+  const [processingBookingId, setProcessingBookingId] = useState(null);
   const { token, user, isLoading: authLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
+  const BASE_URL = "http://tour.phamhuuthuan.io.vn:8080";
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -19,15 +26,10 @@ function MyBookings() {
     if (!authLoading && isAuthenticated && user) {
       const fetchTourDetails = async (tourId) => {
         try {
-          const response = await fetch(`http://localhost:3333/tour/${tourId}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+          const response = await axios.get(`${BASE_URL}/tour/${tourId}`, {
+            headers: { Authorization: `Bearer ${token}` }
           });
-          if (!response.ok) {
-            throw new Error('Không thể tải thông tin tour');
-          }
-          return await response.json();
+          return response.data;
         } catch (error) {
           console.error('Error fetching tour details:', error);
           return null;
@@ -37,17 +39,11 @@ function MyBookings() {
       const fetchBookings = async () => {
         try {
           console.log('Fetching bookings for user:', user.id);
-          const response = await fetch(`http://localhost:5555/booking/user/${user.id}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
+          const response = await axios.get(`${BASE_URL}/bookings/user/${user.id}`, {
+            headers: { Authorization: `Bearer ${token}` }
           });
 
-          if (!response.ok) {
-            throw new Error('Không thể tải danh sách đặt tour');
-          }
-
-          const bookingsData = await response.json();
+          const bookingsData = response.data;
           console.log('Bookings data:', bookingsData);
           
           // Fetch tour details for each booking
@@ -77,7 +73,75 @@ function MyBookings() {
 
       fetchBookings();
     }
-  }, [token, navigate, user, authLoading, isAuthenticated]);
+  }, [token, navigate, user, authLoading, isAuthenticated, BASE_URL]);
+
+  // Kiểm tra trạng thái thanh toán sau khi thanh toán hoàn tất
+  useEffect(() => {
+    const checkPaymentStatus = async () => {
+      // Lấy thông tin từ localStorage nếu tồn tại
+      const paymentInfo = localStorage.getItem('currentPayment');
+      if (paymentInfo && processingBookingId) {
+        try {
+          const { bookingId, paymentMethod } = JSON.parse(paymentInfo);
+          
+          // Thực hiện kiểm tra trạng thái thanh toán
+          // Giả định API endpoint: ${BASE_URL}/payment/check-status/${bookingId}
+          const response = await axios.get(`${BASE_URL}/payment/check-status/${bookingId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          if (response.data && response.data.status === 'SUCCESS') {
+            // Cập nhật trạng thái booking
+            const updateResponse = await axios.put(`${BASE_URL}/booking`, 
+              {
+                id: bookingId,
+                status: 'CONFIRMED',
+                payment_status: 'PAID',
+                payment_method: paymentMethod
+              },
+              {
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}` 
+                }
+              }
+            );
+            
+            if (updateResponse.status === 200 || updateResponse.status === 204) {
+              setBookings(prevBookings => 
+                prevBookings.map(booking => 
+                  booking.id === bookingId 
+                    ? { ...booking, status: 'CONFIRMED', payment_status: 'PAID', payment_method: paymentMethod }
+                    : booking
+                )
+              );
+              
+              toast.success('Thanh toán thành công!');
+              
+              // Xóa thông tin thanh toán
+              localStorage.removeItem('currentPayment');
+              setShowPaymentFrame(false);
+              setPaymentUrl('');
+              setProcessingBookingId(null);
+            }
+          } else if (response.data && response.data.status === 'FAILED') {
+            toast.error('Thanh toán thất bại, vui lòng thử lại!');
+            localStorage.removeItem('currentPayment');
+            setShowPaymentFrame(false);
+            setPaymentUrl('');
+            setProcessingBookingId(null);
+          }
+        } catch (error) {
+          console.error('Error checking payment status:', error);
+        }
+      }
+    };
+    
+    // Kiểm tra trạng thái thanh toán mỗi 5 giây
+    const intervalId = setInterval(checkPaymentStatus, 5000);
+    
+    return () => clearInterval(intervalId);
+  }, [token, BASE_URL, processingBookingId]);
 
   const canCancelBooking = (booking) => {
     if (booking.status !== 'PENDING') {
@@ -110,34 +174,170 @@ function MyBookings() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5555/booking`, {
-        method: 'PUT',
-        headers: {
+      const updatedBooking = {
+        id: id,
+        status: 'CANCELLED'
+      };
+      
+      const response = await axios.put(`${BASE_URL}/booking`, updatedBooking, {
+        headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          id: id,
-          status: 'CANCELLED'
-        })
+          'Authorization': `Bearer ${token}` 
+        }
       });
 
-      if (!response.ok) {
+      if (response.status === 200 || response.status === 204) {
+        // Update bookings list
+        setBookings(bookings.map(booking => 
+          booking.id === id 
+            ? { ...booking, status: 'CANCELLED' }
+            : booking
+        ));
+
+        toast.success('Hủy đặt tour thành công');
+      } else {
         throw new Error('Không thể hủy đặt tour');
       }
-
-      // Update bookings list
-      setBookings(bookings.map(booking => 
-        booking.id === id 
-          ? { ...booking, status: 'CANCELLED' }
-          : booking
-      ));
-
-      toast.success('Hủy đặt tour thành công');
     } catch (error) {
       console.error('Error cancelling booking:', error);
       toast.error('Không thể hủy đặt tour');
     }
+  };
+
+  const initiatePayment = async (id, paymentMethod) => {
+    const booking = bookings.find(b => b.id === id);
+    if (!booking) return;
+    
+    if (booking.status !== 'PENDING') {
+      toast.error('Chỉ có thể thanh toán tour đang chờ xác nhận');
+      return;
+    }
+    
+    try {
+      setPaymentLoading(true);
+      setProcessingBookingId(id);
+      
+      // Gửi yêu cầu tạo giao dịch thanh toán
+      const paymentRequest = {
+        booking_id: id,
+        amount: booking.total_price,
+        payment_method: paymentMethod,
+        return_url: window.location.href,
+        cancel_url: window.location.href
+      };
+      
+      // Thay thế bằng API thực tế
+      const response = await axios.post(`${BASE_URL}/payment/create`, paymentRequest, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      // Mô phỏng khi chưa có API thực tế
+      if (!response.data || !response.data.payment_url) {
+        // Tạo URL thanh toán mô phỏng
+        let mockPaymentUrl;
+        if (paymentMethod === 'MOMO') {
+          mockPaymentUrl = `https://test-payment.momo.vn/gw_payment/payment/qr?amount=${booking.total_price}&orderId=${id}`;
+        } else {
+          mockPaymentUrl = `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?amount=${booking.total_price}&orderId=${id}`;
+        }
+        
+        // Lưu thông tin thanh toán để kiểm tra sau
+        localStorage.setItem('currentPayment', JSON.stringify({
+          bookingId: id,
+          paymentMethod: paymentMethod,
+          amount: booking.total_price
+        }));
+        
+        setPaymentUrl(mockPaymentUrl);
+        setShowPaymentFrame(true);
+      } else {
+        // Nếu có API thực tế
+        localStorage.setItem('currentPayment', JSON.stringify({
+          bookingId: id,
+          paymentMethod: paymentMethod,
+          amount: booking.total_price
+        }));
+        
+        setPaymentUrl(response.data.payment_url);
+        setShowPaymentFrame(true);
+      }
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      toast.error('Không thể tạo giao dịch thanh toán');
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const closePaymentFrame = () => {
+    if (window.confirm('Bạn có chắc muốn hủy quá trình thanh toán?')) {
+      setShowPaymentFrame(false);
+      setPaymentUrl('');
+      setProcessingBookingId(null);
+    }
+  };
+
+  const openPaymentModal = (booking) => {
+    const toastId = toast.info(
+      <div>
+        <p className="font-medium mb-2">Chọn phương thức thanh toán</p>
+        <p className="mb-1">Tour: <span className="font-medium">{booking.tour_title}</span></p>
+        <p className="mb-4">
+          Tổng tiền: <span className="font-medium">
+            {new Intl.NumberFormat('vi-VN', {
+              style: 'currency',
+              currency: 'VND'
+            }).format(booking.total_price)}
+          </span>
+        </p>
+        
+        <div className="space-y-3 mb-4">
+          <button 
+            onClick={() => {
+              toast.dismiss(toastId);
+              initiatePayment(booking.id, 'MOMO');
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 border border-pink-300 bg-pink-50 rounded hover:bg-pink-100"
+          >
+            <span className="flex items-center">
+              <span className="bg-pink-500 text-white px-2 py-1 rounded mr-2">MOMO</span>
+              Ví điện tử MoMo
+            </span>
+            <span className="text-pink-500">→</span>
+          </button>
+          
+          <button 
+            onClick={() => {
+              toast.dismiss(toastId);
+              initiatePayment(booking.id, 'VNPAY');
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 border border-blue-300 bg-blue-50 rounded hover:bg-blue-100"
+          >
+            <span className="flex items-center">
+              <span className="bg-blue-500 text-white px-2 py-1 rounded mr-2">VNPAY</span>
+              Thanh toán VNPAY
+            </span>
+            <span className="text-blue-500">→</span>
+          </button>
+        </div>
+        
+        <div className="flex justify-end">
+          <button
+            className="px-2 py-1 bg-gray-300 rounded"
+            onClick={() => toast.dismiss(toastId)}
+          >
+            Hủy bỏ
+          </button>
+        </div>
+      </div>,
+      {
+        autoClose: false,
+        closeOnClick: false,
+      }
+    );
   };
 
   if (authLoading || loading) {
@@ -198,14 +398,37 @@ function MyBookings() {
                    booking.status}
                 </span>
                 
-                {booking.status === 'PENDING' && canCancelBooking(booking) && (
-                  <button
-                    onClick={() => cancelBooking(booking.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
-                  >
-                    Hủy đặt tour
-                  </button>
-                )}
+                <div className="flex space-x-2">
+                  {booking.status === 'PENDING' && (
+                    <>
+                      <button
+                        onClick={() => openPaymentModal(booking)}
+                        className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
+                        disabled={paymentLoading || processingBookingId === booking.id}
+                      >
+                        {paymentLoading && processingBookingId === booking.id ? (
+                          <span className="flex items-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Đang xử lý
+                          </span>
+                        ) : "Thanh toán"}
+                      </button>
+                      
+                      {canCancelBooking(booking) && (
+                        <button
+                          onClick={() => cancelBooking(booking.id)}
+                          className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
+                          disabled={paymentLoading}
+                        >
+                          Hủy đặt tour
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -221,6 +444,35 @@ function MyBookings() {
           >
             Xem danh sách tour
           </button>
+        </div>
+      )}
+
+      {/* Payment iframe modal */}
+      {showPaymentFrame && paymentUrl && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-4 w-full max-w-4xl h-5/6 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Thanh toán</h2>
+              <button 
+                onClick={closePaymentFrame}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-grow overflow-hidden rounded">
+              <iframe 
+                src={paymentUrl} 
+                className="w-full h-full border-0"
+                title="Payment Gateway"
+              />
+            </div>
+            <div className="mt-4 text-center text-sm text-gray-500">
+              Nếu cửa sổ thanh toán không hiển thị, vui lòng <a href={paymentUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">bấm vào đây</a> để mở trang thanh toán.
+            </div>
+          </div>
         </div>
       )}
     </div>

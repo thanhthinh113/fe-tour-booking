@@ -20,7 +20,7 @@ function PaymentForm() {
 
     const fetchBookingDetails = async () => {
       try {
-        const response = await fetch(`http://localhost:5555/booking/${id}`, {
+        const response = await fetch(`http://tour.phamhuuthuan.io.vn:8080/booking/${id}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -58,7 +58,7 @@ function PaymentForm() {
       // Handle COD payment separately
       if (paymentMethod === 'COD') {
         try {
-          const updateResponse = await fetch(`http://localhost:5555/booking`, {
+          const updateResponse = await fetch(`http://tour.phamhuuthuan.io.vn:8080/booking`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ function PaymentForm() {
       console.log('Sending payment request:', paymentRequest);
       console.log('Booking ID:', id);
 
-      const response = await fetch(`http://localhost:5555/booking/${id}/payment`, {
+      const response = await fetch(`http://tour.phamhuuthuan.io.vn:8080/booking/${id}/payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

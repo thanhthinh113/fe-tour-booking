@@ -17,7 +17,7 @@ const PaymentCallback = () => {
         const orderId = searchParams.get('vnp_TxnRef');
         
         // First, process the callback with payment service
-        const callbackResponse = await fetch(`http://localhost:8086/api/payments/vnpay/callback${location.search}`, {
+        const callbackResponse = await fetch(`http://tour.phamhuuthuan.io.vn:8080/api/payments/vnpay/callback${location.search}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -28,7 +28,7 @@ const PaymentCallback = () => {
         }
 
         // Then get the payment details
-        const paymentResponse = await fetch(`http://localhost:8086/api/payments/${orderId}`, {
+        const paymentResponse = await fetch(`http://tour.phamhuuthuan.io.vn:8080/api/payments/${orderId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -45,7 +45,7 @@ const PaymentCallback = () => {
           setStatus('success');
           // Update booking status if needed
           try {
-            await fetch(`http://localhost:5555/booking`, {
+            await fetch(`http://tour.phamhuuthuan.io.vn:8080/booking`, {
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json',

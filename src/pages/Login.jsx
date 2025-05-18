@@ -32,7 +32,7 @@ const Login = () => {
 
     try {
       const response = await fetch(
-        "http://customer.phamhuuthuan.io.vn:8081/customer/auth/login",
+        "http://tour.phamhuuthuan.io.vn:8080/customer/auth/login",
         {
           method: "POST",
           headers: {
@@ -71,7 +71,7 @@ const Login = () => {
 
   const handleGoogleLogin = () => {
     window.location.href =
-      "http://customer.phamhuuthuan.io.vn:8081/oauth2/authorization/google";
+      "http://tour.phamhuuthuan.io.vn:8080/oauth2/authorization/google";
   };
 
   const handleSignUpRedirect = () => {

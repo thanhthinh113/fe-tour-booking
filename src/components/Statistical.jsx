@@ -7,7 +7,7 @@ const Statistical = () => {
   const { token } = useAuth();
   const [bookings, setBookings] = useState([]);
 
-  const BASE_URL = "http://customer.phamhuuthuan.io.vn:8082";
+  const BASE_URL = "http://tour.phamhuuthuan.io.vn:8080";
 
   const fetchBookings = async () => {
     try {

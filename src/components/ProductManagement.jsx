@@ -18,7 +18,7 @@ const ProductManagement = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3333/tours")
+      .get("http://tour.phamhuuthuan.io.vn:8080/tours")
       .then((res) => {
         setProducts(res.data);
       })
@@ -60,7 +60,7 @@ const ProductManagement = () => {
     formData.append("file", image);
 
     axios
-      .post("http://localhost:3333/tour/with-image", formData, {
+      .post("http://tour.phamhuuthuan.io.vn:8080/tour/with-image", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       })
       .then((res) => {
@@ -93,7 +93,7 @@ const ProductManagement = () => {
             className="px-2 py-1 bg-red-500 text-white rounded"
             onClick={() => {
               axios
-                .delete(`http://localhost:3333/tour/${id}`)
+                .delete(`http://tour.phamhuuthuan.io.vn:8080/tour/${id}`)
                 .then(() => {
                   setProducts((prev) => prev.filter((p) => p.id_tour !== id));
                   toast.success("Đã xoá tour thành công!");
@@ -126,7 +126,7 @@ const ProductManagement = () => {
     };
 
     axios
-      .put(`http://localhost:3333/tours/${id}`, updatedTour)
+      .put(`http://tour.phamhuuthuan.io.vn:8080/tours/${id}`, updatedTour)
       .then(() => {
         setProducts((prev) =>
           prev.map((p) => (p.id_tour === id ? updatedTour : p))

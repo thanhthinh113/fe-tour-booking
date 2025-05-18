@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tour-booking-frontend:latest
+    container_name: tour-booking-frontend
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - app-network
+    volumes:
+      - ./dist:/usr/share/nginx/html
+
+networks:
+  app-network:
+    driver: bridge
