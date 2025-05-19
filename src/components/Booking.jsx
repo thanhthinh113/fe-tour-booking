@@ -244,15 +244,15 @@ const Booking = () => {
                   {new Date(booking.created_at).toLocaleDateString()}
                 </td>
                 <td className="border px-4 py-2">
-                  <button
+                  {/* <button
                     onClick={() => handleDeleteBooking(booking.id)}
                     className="text-red-500 hover:underline mr-2"
                   >
                     Xóa
-                  </button>
+                  </button> */}
 
                   {/* Chỉ hiện nút "Xác nhận" nếu trạng thái hiện tại là PENDING */}
-                  {booking.status === "PENDING" && (
+                  {/* {booking.status === "PENDING" && (
                     <button
                       onClick={() =>
                         handleUpdateStatus(booking.id, "CONFIRMED")
@@ -261,7 +261,7 @@ const Booking = () => {
                     >
                       Xác nhận
                     </button>
-                  )}
+                  )} */}
 
                   {/* Chỉ hiện nút "Hủy" nếu trạng thái hiện tại là PENDING */}
                   {booking.status === "PENDING" && (
@@ -269,7 +269,7 @@ const Booking = () => {
                       onClick={() =>
                         handleUpdateStatus(booking.id, "CANCELLED")
                       }
-                      className="text-gray-500 hover:underline"
+                      className="text-red-500 hover:underline"
                     >
                       Hủy
                     </button>
