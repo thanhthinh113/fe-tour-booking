@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { sendPaymentNotification } from '../api';
 
 const PaymentCallback = () => {
   const [status, setStatus] = useState('processing');
@@ -8,7 +9,7 @@ const PaymentCallback = () => {
   const [paymentDetails, setPaymentDetails] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   useEffect(() => {
     const processPaymentCallback = async () => {
@@ -56,6 +57,18 @@ const PaymentCallback = () => {
                 status: 'CONFIRMED'
               })
             });
+
+            // Send payment success notification
+            try {
+              await sendPaymentNotification(
+                user.id,
+                paymentData.tourId,
+                orderId
+              );
+              console.log('Payment notification sent successfully');
+            } catch (notificationError) {
+              console.error('Error sending payment notification:', notificationError);
+            }
           } catch (error) {
             console.error('Error updating booking status:', error);
             // Log detailed error for debugging
@@ -74,7 +87,7 @@ const PaymentCallback = () => {
     };
 
     processPaymentCallback();
-  }, [location.search, token, navigate]);
+  }, [location.search, token, navigate, user]);
 
   useEffect(() => {
     let timeoutId;
