@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
+  const API_BASE_URL = "http://tour.phamhuuthuan.io.vn:8080/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -31,16 +32,13 @@ const Login = () => {
     }
 
     try {
-      const response = await fetch(
-        "http://tour.phamhuuthuan.io.vn:8080/customer/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}customer/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
       if (!response.ok) {
         const errorData = await response.text();
@@ -70,8 +68,7 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href =
-      "http://tour.phamhuuthuan.io.vn:8080/oauth2/authorization/google";
+    window.location.href = `${API_BASE_URL}oauth2/authorization/google`;
   };
 
   const handleSignUpRedirect = () => {
