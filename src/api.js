@@ -20,3 +20,23 @@ export const getCustomerById = async (id) => {
   const response = await fetch(`${API_BASE_URL}/customers/${id}`);
   return response.json();
 };
+
+export const sendPaymentNotification = async (userId, tourId, bookingId) => {
+  const response = await fetch(`http://localhost:8087/api/notifications/payment-success?userId=${userId}&tourId=${tourId}&bookingId=${bookingId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  return response.json();
+};
+
+export const sendBookingNotification = async (userId, tourId, bookingId) => {
+  const response = await fetch(`http://localhost:8087/api/notifications/booking-success?userId=${userId}&tourId=${tourId}&bookingId=${bookingId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  return response.json();
+};

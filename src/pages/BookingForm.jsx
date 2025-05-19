@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
+import { sendBookingNotification } from "../api";
 
 function BookingForm() {
   const { id } = useParams();
@@ -98,7 +99,7 @@ function BookingForm() {
 
       const requestData = {
         tour_id: parseInt(id),
-        user_id: user.id, // Sử dụng user.id từ context
+        user_id: user.id,
         booking_date: bookingData.booking_date,
         status: "PENDING",
         number_of_people: parseInt(bookingData.number_of_people),
@@ -123,6 +124,18 @@ function BookingForm() {
 
       const data = await response.json();
       console.log("Booking response:", data);
+
+      // Send booking success notification
+      try {
+        await sendBookingNotification(
+          user.id,
+          parseInt(id),
+          data.id
+        );
+        console.log('Booking notification sent successfully');
+      } catch (notificationError) {
+        console.error('Error sending booking notification:', notificationError);
+      }
 
       toast.success("Đặt tour thành công!");
       navigate(`/payment/${data.id}`);
