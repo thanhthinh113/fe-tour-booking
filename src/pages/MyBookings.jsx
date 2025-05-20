@@ -7,19 +7,13 @@ import axios from "axios";
 function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentLoading] = useState(false);
   const [showPaymentFrame, setShowPaymentFrame] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
   const [processingBookingId, setProcessingBookingId] = useState(null);
   const { token, user, isLoading: authLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-<<<<<<< HEAD
- const BASE_URL = "http://customer.phamhuuthuan.io.vn:8082";
-=======
-
   const BASE_URL = "http://tour.phamhuuthuan.io.vn:8080";
-
->>>>>>> 097d0381d6ef47c6c7310e8814372827e441bd65
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       console.log("User not authenticated, redirecting to login");
@@ -42,18 +36,11 @@ function MyBookings() {
 
       const fetchBookings = async () => {
         try {
-<<<<<<< HEAD
-          console.log('Fetching bookings for user:', user.id);
-          const response = await fetch(`${BASE_URL}/bookings`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-=======
           console.log("Fetching bookings for user:", user.id);
           const response = await axios.get(
             `${BASE_URL}/bookings/user/${user.id}`,
             {
               headers: { Authorization: `Bearer ${token}` },
->>>>>>> 097d0381d6ef47c6c7310e8814372827e441bd65
             }
           );
 

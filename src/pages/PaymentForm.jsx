@@ -266,23 +266,7 @@ function PaymentForm() {
                 Thanh toán qua VNPay
               </button>
 
-<<<<<<< HEAD
-           <button
-            onClick={() => handlePayment('MOMO')}
-            disabled={processingPayment}
-            className="w-full bg-pink-500 text-white px-6 py-3 rounded-lg hover:bg-pink-400 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-        {processingPayment ? (
-    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-  ) : (
-    <img src="/momo-logo.png" alt="Momo" className="h-6 mr-2" />
-  )}
-  Thanh toán qua Momo
-</button>
 
-
-                  <button
-=======
               <button
                 onClick={() => handlePayment("MOMO")}
                 disabled={processingPayment}
@@ -297,7 +281,6 @@ function PaymentForm() {
               </button>
 
               <button
->>>>>>> 097d0381d6ef47c6c7310e8814372827e441bd65
                 onClick={() => navigate(`/tourdetail/${booking.tour_id}`)}
                 disabled={processingPayment}
                 className="w-full bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed"

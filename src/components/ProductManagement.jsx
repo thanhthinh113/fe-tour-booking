@@ -1,90 +1,43 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useAuth } from "../contexts/AuthContext";
 
-const EMPTY = {
-  title: "",
-  description: "",
-  location: "",
-  duration: "",
-  price: "",
-  max_participants: "",
-  start_date: "",
-  end_date: "",
-  image: null,
-};
+const ProductManagement = () => {
+  const [products, setProducts] = useState([]);
+  const [newTour, setNewTour] = useState({
+    title: "",
+    description: "",
+    location: "",
+    duration: "",
+    price: "",
+    max_participants: "",
+    start_date: "",
+    end_date: "",
+    image: null,
+  });
 
-export default function ProductManagement() {
-  const { token } = useAuth();
-  const api = useMemo(
-    () =>
-      axios.create({
-        baseURL: "http://tour.phamhuuthuan.io.vn:8080",
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-    [token]
-  );
-
-  const [tours, setTours] = useState([]);
-  const [form, setForm] = useState(EMPTY);
-  const [preview, setPreview] = useState(null); // ảnh xem trước
-  const [oldImage, setOldImg] = useState(null); // URL ảnh cũ
-  const [editing, setEdit] = useState(null);
-  const [filter, setFilter] = useState("");
-
-  // Ref để reset input file
-  const fileInputRef = useRef(null);
-
-  const fmt = (d) => (d ? new Date(d).toISOString().split("T")[0] : "");
-  const reset = () => {
-    setForm(EMPTY);
-    setPreview(null);
-    setOldImg(null);
-    setEdit(null);
-  };
-
-  /* fetch tours */
   useEffect(() => {
-    api.get("/tours").then((r) => setTours(r.data));
-  }, [api]);
-
-  /* ─────────────── ADD ─────────────── */
-  const addTour = async () => {
-    if (!form.image) return toast.error("Vui lòng chọn ảnh!");
-
-    const fd = new FormData();
-    const { image, ...rest } = form;
-    fd.append(
-      "tour",
-      JSON.stringify({
-        ...rest,
-        start_date: fmt(rest.start_date),
-        end_date: fmt(rest.end_date),
+    axios
+      .get("http://localhost:3333/tours")
+      .then((res) => {
+        setProducts(res.data);
       })
-    );
-    fd.append("file", image);
-
-    try {
-      const { data } = await api.post("/tour/with-image", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
+      .catch((err) => {
+        console.error("Lỗi khi fetch dữ liệu tours:", err);
       });
-      setTours((p) => [...p, data]);
-      toast.success("Thêm tour thành công!");
-      reset();
+  }, []);
 
-      // Reset input file UI
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    } catch {
-      toast.error("Thêm tour thất bại!");
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "image" && files) {
+      setNewTour({ ...newTour, image: files[0] });
+    } else {
+      setNewTour({ ...newTour, [name]: value });
     }
   };
 
-<<<<<<< HEAD
   const formatDate = (dateStr) => {
-    return new Date(dateStr).toISOString().split("T")[0]; 
+    return new Date(dateStr).toISOString().split("T")[0]; // YYYY-MM-DD
   };
 
   const handleAdd = () => {
@@ -100,6 +53,7 @@ export default function ProductManagement() {
       image,
     } = newTour;
 
+    // Kiểm tra các trường bắt buộc
     if (
       !title.trim() ||
       !description.trim() ||
@@ -114,6 +68,7 @@ export default function ProductManagement() {
       return;
     }
 
+    // Kiểm tra định dạng số
     if (
       Number(duration) <= 0 ||
       Number(price) <= 0 ||
@@ -123,11 +78,13 @@ export default function ProductManagement() {
       return;
     }
 
+    // Kiểm tra ngày
     if (new Date(start_date) > new Date(end_date)) {
       toast.error("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!");
       return;
     }
 
+    // Kiểm tra ảnh
     if (!image) {
       toast.error("Vui lòng chọn ảnh!");
       return;
@@ -145,71 +102,55 @@ export default function ProductManagement() {
 
     formData.append("tour", JSON.stringify(tourWithoutImage));
     formData.append("file", imageFile);
-=======
-  const updateTour = async () => {
-    const payload = {
-      ...form,
-      id_tour: editing,
-      start_date: fmt(form.start_date),
-      end_date: fmt(form.end_date),
-    };
 
-    try {
-      let imageUrl = oldImage;
-
-      if (form.image) {
-        // 1. Upload ảnh mới trước
-        const fd = new FormData();
-        fd.append("file", form.image);
->>>>>>> 097d0381d6ef47c6c7310e8814372827e441bd65
-
-        const uploadResp = await api.post("/tour/upload-image", fd, {
-          headers: { "Content-Type": "multipart/form-data" },
+    axios
+      .post("http://localhost:3333/tour/with-image", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((res) => {
+        setProducts([...products, res.data]);
+        setNewTour({
+          title: "",
+          description: "",
+          location: "",
+          duration: "",
+          price: "",
+          max_participants: "",
+          start_date: "",
+          end_date: "",
+          image: null,
         });
-        imageUrl = uploadResp.data; // giả sử backend trả về URL ảnh
-      }
-
-      // 2. Cập nhật tour với URL ảnh (cũ hoặc mới)
-      payload.image = imageUrl;
-      const { data } = await api.put("/tour", payload);
-
-      setTours((p) => p.map((t) => (t.id_tour === editing ? data : t)));
-
-      toast.success("Cập nhật thành công!");
-      reset();
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (error) {
-      toast.error("Cập nhật thất bại!");
-    }
+        toast.success("Thêm tour thành công!");
+      })
+      .catch((err) => {
+        console.error("Lỗi khi thêm tour:", err);
+        toast.error("Thêm tour thất bại!");
+      });
   };
 
-  const save = () => (editing ? updateTour() : addTour());
-
-  /* ─────────────── DELETE ─────────────── */
-  const removeTour = (id) => {
-    const toastId = toast.info(
+  const handleDelete = (id) => {
+    toast.info(
       <div>
-        <p>Bạn có chắc xoá tour này?</p>
-        <div className="flex justify-end gap-2 mt-2">
+        <p>Bạn có chắc chắn muốn xoá tour này?</p>
+        <div className="flex justify-end mt-2 space-x-2">
           <button
             className="px-2 py-1 bg-red-500 text-white rounded"
-            onClick={async () => {
-              try {
-                await api.delete(`/tour/${id}`);
-                setTours((p) => p.filter((t) => t.id_tour !== id));
-                toast.dismiss(toastId);
-                toast.success("Đã xoá tour!");
-              } catch {
-                toast.dismiss(toastId);
-                toast.error("Xoá thất bại!");
-              }
+            onClick={() => {
+              axios
+                .delete(`http://localhost:3333/tour/${id}`)
+                .then(() => {
+                  setProducts((prev) => prev.filter((p) => p.id_tour !== id));
+                  toast.success("Đã xoá tour thành công!");
+                })
+                .catch(() => toast.error("Xoá thất bại!"));
+              toast.dismiss();
             }}
           >
             Xoá
           </button>
           <button
             className="px-2 py-1 bg-gray-300 rounded"
-            onClick={() => toast.dismiss(toastId)}
+            onClick={() => toast.dismiss()}
           >
             Huỷ
           </button>
@@ -219,148 +160,139 @@ export default function ProductManagement() {
     );
   };
 
-  /* ─────────────── UI ─────────────── */
-  const fields = [
-    ["title", "Tiêu đề"],
-    ["description", "Mô tả"],
-    ["location", "Địa điểm"],
-    ["duration", "Thời lượng (ngày)", "number"],
-    ["price", "Giá", "number"],
-    ["max_participants", "Số người tối đa", "number"],
-  ];
+  const handleEdit = (id) => {
+    const tour = products.find((p) => p.id_tour === id);
+    const updatedTour = {
+      ...tour,
+      title: tour.title + " (Updated)",
+      start_date: formatDate(tour.start_date),
+      end_date: formatDate(tour.end_date),
+    };
+
+    axios
+      .put(`http://localhost:3333/tours/${id}`, updatedTour)
+      .then(() => {
+        setProducts((prev) =>
+          prev.map((p) => (p.id_tour === id ? updatedTour : p))
+        );
+        toast.success("Cập nhật thành công!");
+      })
+      .catch((err) => {
+        console.error("Lỗi cập nhật:", err);
+        toast.error("Cập nhật thất bại!");
+      });
+  };
 
   return (
     <div className="bg-white p-6 rounded shadow">
       <h2 className="text-xl font-bold mb-4">Quản lý Tour</h2>
-
-      <input
-        className="border p-2 rounded w-full mb-4"
-        placeholder="Tìm theo địa điểm"
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-      />
-
-      {/* form */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        {fields.map(([k, label, type = "text"]) => (
-          <div key={k}>
+        {[
+          ["title", "Tiêu đề"],
+          ["description", "Mô tả"],
+          ["location", "Địa điểm"],
+          ["duration", "Thời lượng (ngày)"],
+          ["price", "Giá"],
+          ["max_participants", "Số người tối đa"],
+          ["start_date", "Ngày bắt đầu"],
+          ["end_date", "Ngày kết thúc"],
+        ].map(([name, label]) => (
+          <div key={name}>
             <label className="block text-sm font-medium">{label}</label>
             <input
+              type={
+                ["price", "duration", "max_participants"].includes(name)
+                  ? "number"
+                  : name.includes("date")
+                  ? "date"
+                  : "text"
+              }
+              name={name}
+              value={newTour[name]}
+              onChange={handleChange}
               className="w-full border px-2 py-1 rounded"
-              type={type}
-              value={form[k]}
-              onChange={(e) => setForm({ ...form, [k]: e.target.value })}
             />
           </div>
         ))}
-
-        {/* file input */}
         <div>
           <label className="block text-sm font-medium">Ảnh</label>
           <input
-            ref={fileInputRef}
             type="file"
+            name="image"
             accept="image/*"
+            onChange={handleChange}
             className="w-full border px-2 py-1 rounded"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              setForm({ ...form, image: file });
-              setPreview(file ? URL.createObjectURL(file) : null);
-            }}
           />
-          {preview && (
-            <img
-              src={preview}
-              alt="preview"
-              className="mt-2 w-32 h-32 object-cover rounded shadow"
-            />
-          )}
         </div>
       </div>
 
       <button
-        onClick={save}
-        className="px-4 py-2 mb-4 bg-blue-500 text-white rounded hover:bg-blue-600"
+        onClick={handleAdd}
+        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
       >
-        {editing ? "Lưu thay đổi" : "Thêm Tour"}
+        Thêm Tour
       </button>
-      {editing && (
-        <button
-          onClick={reset}
-          className="ml-2 px-4 py-2 mb-4 bg-gray-400 text-white rounded"
-        >
-          Huỷ
-        </button>
-      )}
 
-      {/* table */}
-      <table className="min-w-full text-sm border">
-        <thead className="bg-gray-100">
+      <table className="min-w-full bg-white border border-gray-300 text-sm">
+        <thead className="bg-gray-100 text-left">
           <tr>
-            {["ID", ...fields.map(([, l]) => l), "Ảnh", "Hành động"].map(
-              (h) => (
-                <th key={h} className="border p-2">
-                  {h}
-                </th>
-              )
-            )}
+            <th className="border p-2">ID</th>
+            <th className="border p-2">Tiêu đề</th>
+            <th className="border p-2">Mô tả</th>
+            <th className="border p-2">Địa điểm</th>
+            <th className="border p-2">Thời lượng</th>
+            <th className="border p-2">Giá (VND)</th>
+            <th className="border p-2">SL tối đa</th>
+            <th className="border p-2">Bắt đầu</th>
+            <th className="border p-2">Kết thúc</th>
+            <th className="border p-2">Ảnh</th>
+            <th className="border p-2">Hành động</th>
           </tr>
         </thead>
         <tbody>
-          {tours
-            .filter((t) =>
-              t.location.toLowerCase().includes(filter.toLowerCase())
-            )
-            .map((t) => (
-              <tr
-                key={t.id_tour}
-                className="cursor-pointer hover:bg-gray-50"
-                onClick={() => {
-                  setForm({
-                    ...t,
-                    start_date: fmt(t.start_date),
-                    end_date: fmt(t.end_date),
-                    image: null,
-                  });
-                  setPreview(t.image);
-                  setOldImg(t.image);
-                  setEdit(t.id_tour);
-                }}
-              >
-                <td className="border p-2">{t.id_tour}</td>
-                <td className="border p-2">{t.title}</td>
-                <td className="border p-2">{t.description}</td>
-                <td className="border p-2">{t.location}</td>
-                <td className="border p-2">{t.duration}</td>
-                <td className="border p-2">
-                  {new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(t.price)}
-                </td>
-                <td className="border p-2">{t.max_participants}</td>
-                <td className="border p-2">
-                  <img
-                    src={t.image}
-                    alt="tour"
-                    className="w-16 h-16 object-cover rounded"
-                  />
-                </td>
-                <td className="border p-2">
-                  <button
-                    className="px-2 py-1 bg-red-500 text-white rounded"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeTour(t.id_tour);
-                    }}
-                  >
-                    Xoá
-                  </button>
-                </td>
-              </tr>
-            ))}
+          {products.map((tour) => (
+            <tr key={tour.id_tour}>
+              <td className="border p-2">{tour.id_tour}</td>
+              <td className="border p-2">{tour.title}</td>
+              <td className="border p-2">{tour.description}</td>
+              <td className="border p-2">{tour.location}</td>
+              <td className="border p-2">{tour.duration}</td>
+              <td className="border p-2">
+                {new Intl.NumberFormat("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                }).format(tour.price)}
+              </td>
+              <td className="border p-2">{tour.max_participants}</td>
+              <td className="border p-2">{formatDate(tour.start_date)}</td>
+              <td className="border p-2">{formatDate(tour.end_date)}</td>
+              <td className="border p-2">
+                <img
+                  src={tour.image}
+                  alt="tour"
+                  className="w-16 h-16 object-cover rounded"
+                />
+              </td>
+              <td className="border p-2 space-x-2">
+                <button
+                  onClick={() => handleEdit(tour.id_tour)}
+                  className="px-2 py-1 bg-yellow-500 text-white rounded"
+                >
+                  Sửa
+                </button>
+                <button
+                  onClick={() => handleDelete(tour.id_tour)}
+                  className="px-2 py-1 bg-red-500 text-white rounded"
+                >
+                  Xoá
+                </button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
   );
-}
+};
+
+export default ProductManagement;
