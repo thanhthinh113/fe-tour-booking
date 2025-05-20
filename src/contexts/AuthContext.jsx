@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
   const fetchUserProfile = async (authToken) => {
     try {
       const response = await fetch(
-        "http://customer.phamhuuthuan.io.vn:8081/customer/profile",
+        "http://tour.phamhuuthuan.io.vn:8080/customer/profile",
         {
           headers: {
             Authorization: `Bearer ${authToken}`,

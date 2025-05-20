@@ -7,10 +7,14 @@ import { toast } from "react-toastify";
 
 const COLORS = ["#8884d8", "#82ca9d", "#ff7f7f"];
 
+<<<<<<< HEAD
 const Statistical = () => {
   const [data, setData] = useState([]);
   const { token } = useAuth();
   const BASE_URL = "http://customer.phamhuuthuan.io.vn:8082";
+=======
+  const BASE_URL = "http://tour.phamhuuthuan.io.vn:8080";
+>>>>>>> 097d0381d6ef47c6c7310e8814372827e441bd65
 
   useEffect(() => {
     const fetchData = async () => {

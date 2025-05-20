@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { sendPaymentNotification } from '../api';
 
 const PaymentCallback = () => {
   const [status, setStatus] = useState('processing');
@@ -8,7 +9,7 @@ const PaymentCallback = () => {
   const [paymentDetails, setPaymentDetails] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   useEffect(() => {
     const processPaymentCallback = async () => {
@@ -17,7 +18,7 @@ const PaymentCallback = () => {
         const orderId = searchParams.get('vnp_TxnRef');
         
         // First, process the callback with payment service
-        const callbackResponse = await fetch(`http://localhost:8086/api/payments/vnpay/callback${location.search}`, {
+        const callbackResponse = await fetch(`http://tour.phamhuuthuan.io.vn:8080/api/payments/vnpay/callback${location.search}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -28,7 +29,7 @@ const PaymentCallback = () => {
         }
 
         // Then get the payment details
-        const paymentResponse = await fetch(`http://localhost:8086/api/payments/${orderId}`, {
+        const paymentResponse = await fetch(`http://tour.phamhuuthuan.io.vn:8080/api/payments/${orderId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -45,7 +46,7 @@ const PaymentCallback = () => {
           setStatus('success');
           // Update booking status if needed
           try {
-            await fetch(`http://localhost:5555/booking`, {
+            await fetch(`http://tour.phamhuuthuan.io.vn:8080/booking`, {
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json',
@@ -56,6 +57,18 @@ const PaymentCallback = () => {
                 status: 'CONFIRMED'
               })
             });
+
+            // Send payment success notification
+            try {
+              await sendPaymentNotification(
+                user.id,
+                paymentData.tourId,
+                orderId
+              );
+              console.log('Payment notification sent successfully');
+            } catch (notificationError) {
+              console.error('Error sending payment notification:', notificationError);
+            }
           } catch (error) {
             console.error('Error updating booking status:', error);
             // Log detailed error for debugging
@@ -74,7 +87,7 @@ const PaymentCallback = () => {
     };
 
     processPaymentCallback();
-  }, [location.search, token, navigate]);
+  }, [location.search, token, navigate, user]);
 
   useEffect(() => {
     let timeoutId;

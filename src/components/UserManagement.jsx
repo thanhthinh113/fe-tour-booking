@@ -5,11 +5,11 @@ import { toast } from "react-toastify";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([]); // Danh sách đã lọc
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const { token } = useAuth();
 
-  const BASE_URL = "http://customer.phamhuuthuan.io.vn:8081/customer";
+  const BASE_URL = "http://tour.phamhuuthuan.io.vn:8080/customer";
 
   // Fetch all users
   const fetchAllUsers = async () => {
@@ -18,7 +18,7 @@ const UserManagement = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
-      setFilteredUsers(response.data); // Ban đầu, danh sách đã lọc giống danh sách gốc
+      setFilteredUsers(response.data);
     } catch (error) {
       console.error("Error fetching users:", error);
       setUsers([]);
@@ -29,7 +29,7 @@ const UserManagement = () => {
   // Handle search on frontend
   const handleSearch = () => {
     if (!searchTerm) {
-      setFilteredUsers(users); // Nếu không có từ khóa, hiển thị toàn bộ danh sách
+      setFilteredUsers(users);
       return;
     }
 
@@ -47,13 +47,11 @@ const UserManagement = () => {
     fetchAllUsers();
   }, [token]);
 
-  // Update filtered users whenever searchTerm changes
   useEffect(() => {
     handleSearch();
   }, [searchTerm, users]);
 
   // Delete user
-
   const handleDeleteUser = (id) => {
     const toastId = toast.info(
       <div>
@@ -83,7 +81,7 @@ const UserManagement = () => {
                 console.error("Error deleting user:", error);
                 toast.error("Đã xảy ra lỗi khi xoá!");
               }
-              toast.dismiss(toastId); // 🔥 chỉ tắt toast xác nhận
+              toast.dismiss(toastId);
             }}
           >
             Xoá
@@ -103,6 +101,27 @@ const UserManagement = () => {
     );
   };
 
+  // Reset password for user
+  const handleResetPassword = async (id) => {
+    try {
+      const response = await axios.put(
+        `${BASE_URL}/resetpassword/${id}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (response.status === 204) {
+        toast.success("Đã đặt lại mật khẩu thành công!");
+      } else {
+        toast.error("Đặt lại mật khẩu thất bại!");
+      }
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      toast.error("Đã xảy ra lỗi khi đặt lại mật khẩu!");
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-4">Quản lý người dùng</h2>
@@ -111,7 +130,7 @@ const UserManagement = () => {
       <div className="mb-4 flex gap-2">
         <input
           type="text"
-          placeholder="Search by name, email or phone"
+          placeholder="Tìm kiếm theo tên, email hoặc số điện thoại"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="border p-2 rounded w-full"
@@ -149,7 +168,15 @@ const UserManagement = () => {
                 <td className="border px-4 py-2">{user.phone}</td>
                 <td className="border px-4 py-2">{user.role}</td>
                 <td className="border px-4 py-2">{user.authProvider}</td>
-                <td className="border px-4 py-2">
+                <td className="border px-4 py-2 space-x-2">
+                  {user.authProvider !== "GOOGLE" && (
+                    <button
+                      onClick={() => handleResetPassword(user.id)}
+                      className="text-blue-500 hover:underline"
+                    >
+                      Reset PW
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDeleteUser(user.id)}
                     className="text-red-500 hover:underline"

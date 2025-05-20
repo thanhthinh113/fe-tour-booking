@@ -60,7 +60,7 @@ const SignUp = () => {
 
     try {
       const response = await fetch(
-        "http://customer.phamhuuthuan.io.vn:8081/customer/auth/register",
+        "http://tour.phamhuuthuan.io.vn:8080/customer/auth/register",
         {
           method: "POST",
           headers: {

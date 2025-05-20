@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8080/api"; // địa chỉ khi chạy API-GETWAY trong dev
+const API_BASE_URL = "http://tour.phamhuuthuan.io.vn:8080/api"; // địa chỉ của API gateway
 
 export const getAllTours = async () => {
   const response = await fetch(`${API_BASE_URL}/tours`);
@@ -18,5 +18,25 @@ export const bookTour = async (data) => {
 
 export const getCustomerById = async (id) => {
   const response = await fetch(`${API_BASE_URL}/customers/${id}`);
+  return response.json();
+};
+
+export const sendPaymentNotification = async (userId, tourId, bookingId) => {
+  const response = await fetch(`http://localhost:8087/api/notifications/payment-success?userId=${userId}&tourId=${tourId}&bookingId=${bookingId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
+  return response.json();
+};
+
+export const sendBookingNotification = async (userId, tourId, bookingId) => {
+  const response = await fetch(`http://localhost:8087/api/notifications/booking-success?userId=${userId}&tourId=${tourId}&bookingId=${bookingId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
   return response.json();
 };

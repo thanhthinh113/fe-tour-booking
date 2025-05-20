@@ -25,13 +25,13 @@ function TourList() {
       setLoading(true);
       setError("");
       try {
-        let url = "http://localhost:3333/tours";
+        let url = "http://tour.phamhuuthuan.io.vn:8080/tours";
         
         if (searchLocation) {
-          url = `http://localhost:3333/tours/location/${encodeURIComponent(searchLocation)}`;
+          url = `http://tour.phamhuuthuan.io.vn:8080/tours/location/${encodeURIComponent(searchLocation)}`;
         }
         else if (searchTitle) {
-          url = `http://localhost:3333/tours/title/${encodeURIComponent(searchTitle)}`;
+          url = `http://tour.phamhuuthuan.io.vn:8080/tours/title/${encodeURIComponent(searchTitle)}`;
         }
         else if (minPrice !== "" && maxPrice !== "") {
           const min = parseFloat(minPrice);
@@ -49,7 +49,7 @@ function TourList() {
             return;
           }
           
-          url = `http://localhost:3333/tours/price?minPrice=${min}&maxPrice=${max}`;
+          url = `http://tour.phamhuuthuan.io.vn:8080/tours/price?minPrice=${min}&maxPrice=${max}`;
         }
 
         console.log("Fetching from URL:", url);
