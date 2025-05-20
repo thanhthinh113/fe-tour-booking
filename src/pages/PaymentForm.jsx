@@ -254,15 +254,7 @@ function PaymentForm() {
 </button>
 
 
-              <button
-                onClick={() => handlePayment('COD')}
-                disabled={processingPayment}
-                className="w-full bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Thanh toán khi nhận tour (COD)
-              </button>
-
-              <button
+                  <button
                 onClick={() => navigate(`/tourdetail/${booking.tour_id}`)}
                 disabled={processingPayment}
                 className="w-full bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed"

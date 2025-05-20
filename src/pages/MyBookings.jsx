@@ -8,7 +8,7 @@ function MyBookings() {
   const [loading, setLoading] = useState(true);
   const { token, user, isLoading: authLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-
+ const BASE_URL = "http://customer.phamhuuthuan.io.vn:8082";
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       console.log("User not authenticated, redirecting to login");
@@ -37,7 +37,7 @@ function MyBookings() {
       const fetchBookings = async () => {
         try {
           console.log('Fetching bookings for user:', user.id);
-          const response = await fetch(`http://localhost:5555/booking/user/${user.id}`, {
+          const response = await fetch(`${BASE_URL}/bookings`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }

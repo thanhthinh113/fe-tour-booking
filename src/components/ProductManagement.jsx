@@ -37,11 +37,51 @@ const ProductManagement = () => {
   };
 
   const formatDate = (dateStr) => {
-    return new Date(dateStr).toISOString().split("T")[0]; // YYYY-MM-DD
+    return new Date(dateStr).toISOString().split("T")[0]; 
   };
 
   const handleAdd = () => {
-    if (!newTour.image) {
+    const {
+      title,
+      description,
+      location,
+      duration,
+      price,
+      max_participants,
+      start_date,
+      end_date,
+      image,
+    } = newTour;
+
+    if (
+      !title.trim() ||
+      !description.trim() ||
+      !location.trim() ||
+      !duration ||
+      !price ||
+      !max_participants ||
+      !start_date ||
+      !end_date
+    ) {
+      toast.error("Vui lòng điền đầy đủ thông tin tour!");
+      return;
+    }
+
+    if (
+      Number(duration) <= 0 ||
+      Number(price) <= 0 ||
+      Number(max_participants) <= 0
+    ) {
+      toast.error("Thời lượng, giá và số người tối đa phải là số dương!");
+      return;
+    }
+
+    if (new Date(start_date) > new Date(end_date)) {
+      toast.error("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!");
+      return;
+    }
+
+    if (!image) {
       toast.error("Vui lòng chọn ảnh!");
       return;
     }
@@ -49,15 +89,15 @@ const ProductManagement = () => {
     const formData = new FormData();
     const tourData = {
       ...newTour,
-      start_date: formatDate(newTour.start_date),
-      end_date: formatDate(newTour.end_date),
+      start_date: formatDate(start_date),
+      end_date: formatDate(end_date),
       created_at: formatDate(new Date()),
     };
 
-    const { image, ...tourWithoutImage } = tourData;
+    const { image: imageFile, ...tourWithoutImage } = tourData;
 
     formData.append("tour", JSON.stringify(tourWithoutImage));
-    formData.append("file", image);
+    formData.append("file", imageFile);
 
     axios
       .post("http://localhost:3333/tour/with-image", formData, {
