@@ -14,16 +14,16 @@ function ContactUs() {
           <h2 className="text-xl font-semibold mb-4">1. Thông tin liên hệ</h2>
           <ul className="list-disc list-inside space-y-2">
             <li>
-              <strong>Địa chỉ:</strong> Địa chỉ công ty
+              <strong>Địa chỉ:</strong> 536 Đường 2/4, Phường 1, Thành phố HCM
             </li>
             <li>
-              <strong>Hotline:</strong> (Số điện thoại)
+              <strong>Hotline:</strong> (0353081222)
             </li>
             <li>
-              <strong>Email:</strong> (Địa chỉ email)
+              <strong>Email:</strong> (ntdinh25@gmail.com)
             </li>
             <li>
-              <strong>Website:</strong> (Địa chỉ website)
+              <strong>Website:</strong> (https://drive.google.com/drive/u/0/folders/1Lslt-k8BdpDLYUG-p6YJ8FMLE8qhH-hg?hl=vi)
             </li>
             <li>
               <strong>Giờ làm việc:</strong> Thứ 2 - Chủ Nhật, từ 08:00 - 18:00
@@ -35,13 +35,13 @@ function ContactUs() {
           <h2 className="text-xl font-semibold mb-4">2. Liên hệ trực tuyến</h2>
           <ul className="list-disc list-inside space-y-2">
             <li>
-              <strong>Zalo/Viber/WhatsApp:</strong> (Số điện thoại)
+              <strong>Zalo/Viber/WhatsApp:</strong> (0353089987)
             </li>
             <li>
-              <strong>Facebook:</strong> [Link Fanpage]
+              <strong>Facebook:</strong> [https://drive.google.com/drive/u/0/folders/1Lslt-k8BdpDLYUG-p6YJ8FMLE8qhH-hg?hl=vi]
             </li>
             <li>
-              <strong>Instagram:</strong> [Link Instagram]
+              <strong>Instagram:</strong> [https://drive.google.com/drive/u/0/folders/1Lslt-k8BdpDLYUG-p6YJ8FMLE8qhH-hg?hl=vi]
             </li>
           </ul>
         </div>
