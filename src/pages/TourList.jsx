@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+
+const mapContainerStyle = {
+  height: "200px",
+  width: "100%",
+};
 
 function TourList() {
   const [tours, setTours] = useState([]);
@@ -10,7 +16,6 @@ function TourList() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resultCount, setResultCount] = useState(0);
-  
   const [titleSuggestions, setTitleSuggestions] = useState([]);
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
@@ -20,6 +25,7 @@ function TourList() {
   const [sortOrder, setSortOrder] = useState("asc");
   const navigate = useNavigate();
 
+  // Giả sử các tour có latitude và longitude, nếu không bạn cần gọi API để lấy tọa độ
   useEffect(() => {
     const fetchTours = async () => {
       setLoading(true);
@@ -29,11 +35,9 @@ function TourList() {
         
         if (searchLocation) {
           url = `http://tour.phamhuuthuan.io.vn:8080/tours/location/${encodeURIComponent(searchLocation)}`;
-        }
-        else if (searchTitle) {
+        } else if (searchTitle) {
           url = `http://tour.phamhuuthuan.io.vn:8080/tours/title/${encodeURIComponent(searchTitle)}`;
-        }
-        else if (minPrice !== "" && maxPrice !== "") {
+        } else if (minPrice !== "" && maxPrice !== "") {
           const min = parseFloat(minPrice);
           const max = parseFloat(maxPrice);
           
@@ -74,7 +78,6 @@ function TourList() {
         }
         
         const toursArray = Array.isArray(data) ? data : [data];
-        // Sắp xếp mảng trước khi set
         const sortedTours = [...toursArray].sort((a, b) => {
           if (sortType === "price") {
             return sortOrder === "asc" 
@@ -369,10 +372,22 @@ function TourList() {
               Xem chi tiết
             </button>
             {hoveredTour?.id_tour === tour.id_tour && (
-              <div className="absolute z-10 bg-white p-2 border rounded shadow-lg mt-2 w-48">
+              <div className="absolute z-10 bg-white p-2 border rounded shadow-lg mt-2 w-full">
                 <p><strong>Địa điểm:</strong> {tour.location}</p>
                 <p><strong>Thời gian:</strong> {tour.duration} ngày</p>
                 <p><strong>Giá:</strong> {tour.price?.toLocaleString()} VNĐ</p>
+                {/* Hiển thị bản đồ nếu tour có tọa độ */}
+                {tour.latitude && tour.longitude && (
+                  <LoadScript googleMapsApiKey="YOUR_API_KEY">
+                    <GoogleMap
+                      mapContainerStyle={mapContainerStyle}
+                      center={{ lat: tour.latitude, lng: tour.longitude }}
+                      zoom={12}
+                    >
+                      <Marker position={{ lat: tour.latitude, lng: tour.longitude }} />
+                    </GoogleMap>
+                  </LoadScript>
+                )}
               </div>
             )}
           </div>
