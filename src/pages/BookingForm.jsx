@@ -12,7 +12,6 @@ function BookingForm() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Form state
   const [bookingData, setBookingData] = useState({
     booking_date: "",
     number_of_people: 1,
@@ -20,14 +19,15 @@ function BookingForm() {
     total_price: 0,
   });
 
-  // Tính tổng tiền
+  const TIME_WINDOW_MS = 30 * 1000; // 30 giây
+  const MAX_BOOKINGS = 2;
+
   const calculateTotal = () => {
     if (!tour) return 0;
     return tour.price * bookingData.number_of_people;
   };
 
   useEffect(() => {
-    // Kiểm tra đăng nhập
     if (!authLoading && !isAuthenticated) {
       toast.error("Vui lòng đăng nhập để đặt tour");
       navigate("/login");
@@ -43,8 +43,6 @@ function BookingForm() {
           }
           const data = await response.json();
           setTour(data);
-
-          // Cập nhật tổng tiền ban đầu
           setBookingData((prev) => ({
             ...prev,
             total_price: data.price,
@@ -57,12 +55,10 @@ function BookingForm() {
           setLoading(false);
         }
       };
-
       fetchTourDetail();
     }
   }, [id, isAuthenticated, user, navigate, authLoading]);
 
-  // Cập nhật tổng tiền khi số người thay đổi
   useEffect(() => {
     if (tour) {
       setBookingData((prev) => ({
@@ -82,6 +78,16 @@ function BookingForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const now = Date.now();
+    const key = `booking_attempts_${user?.id}_${id}`;
+    const stored = JSON.parse(localStorage.getItem(key)) || [];
+    const recentAttempts = stored.filter((ts) => now - ts < TIME_WINDOW_MS);
+
+    if (recentAttempts.length >= MAX_BOOKINGS) {
+      toast.error(`Chỉ được đặt tối đa ${MAX_BOOKINGS} lần trong ${TIME_WINDOW_MS / 1000} giây.`);
+      return;
+    }
 
     if (!authLoading && (!isAuthenticated || !user)) {
       toast.error("Vui lòng đăng nhập để đặt tour");
@@ -106,8 +112,6 @@ function BookingForm() {
         total_price: parseFloat(bookingData.total_price),
       };
 
-      console.log("Sending booking request:", requestData);
-
       const response = await fetch("http://tour.phamhuuthuan.io.vn:8080/booking", {
         method: "POST",
         headers: {
@@ -123,18 +127,15 @@ function BookingForm() {
       }
 
       const data = await response.json();
-      console.log("Booking response:", data);
 
-      // Send booking success notification
+      // Cập nhật localStorage
+      recentAttempts.push(now);
+      localStorage.setItem(key, JSON.stringify(recentAttempts));
+
       try {
-        await sendBookingNotification(
-          user.id,
-          parseInt(id),
-          data.id
-        );
-        console.log('Booking notification sent successfully');
+        await sendBookingNotification(user.id, parseInt(id), data.id);
       } catch (notificationError) {
-        console.error('Error sending booking notification:', notificationError);
+        console.error("Error sending booking notification:", notificationError);
       }
 
       toast.success("Đặt tour thành công!");
@@ -190,7 +191,6 @@ function BookingForm() {
         <div className="p-6">
           <h1 className="text-2xl font-bold mb-6">Đặt Tour</h1>
 
-          {/* Tour Info Summary */}
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
             <h2 className="text-xl font-semibold mb-2">{tour.title}</h2>
             <p className="text-gray-600 mb-2">Địa điểm: {tour.location}</p>
@@ -203,13 +203,10 @@ function BookingForm() {
             </p>
           </div>
 
-          {/* Booking Form */}
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700 mb-2">
-                  Ngày khởi hành
-                </label>
+                <label className="block text-gray-700 mb-2">Ngày khởi hành</label>
                 <input
                   type="date"
                   name="booking_date"
@@ -235,7 +232,6 @@ function BookingForm() {
                 />
               </div>
 
-              {/* Total Price */}
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-lg font-semibold">
                   Tổng tiền:{" "}
