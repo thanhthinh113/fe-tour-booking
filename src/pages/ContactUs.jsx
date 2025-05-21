@@ -14,7 +14,7 @@ function ContactUs() {
           <h2 className="text-xl font-semibold mb-4">1. Thông tin liên hệ</h2>
           <ul className="list-disc list-inside space-y-2">
             <li>
-              <strong>Địa chỉ:</strong> 536 Đường 2/4, Phường 1, Thành phố HCM
+              <strong>Địa chỉ:</strong> Vịnh Hạ Long, Quảng Ninh, Việt Nam
             </li>
             <li>
               <strong>Hotline:</strong> (0353081222)
