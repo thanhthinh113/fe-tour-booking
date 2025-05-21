@@ -19,7 +19,7 @@ function BookingForm() {
     total_price: 0,
   });
 
-  const TIME_WINDOW_MS = 30 * 1000; // 30 giây
+  const TIME_WINDOW_MS = 30 * 1000;
   const MAX_BOOKINGS = 2;
 
   const calculateTotal = () => {
@@ -128,7 +128,6 @@ function BookingForm() {
 
       const data = await response.json();
 
-      // Cập nhật localStorage
       recentAttempts.push(now);
       localStorage.setItem(key, JSON.stringify(recentAttempts));
 
