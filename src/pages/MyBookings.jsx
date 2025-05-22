@@ -252,21 +252,12 @@ function MyBookings() {
                 {booking.tour_location}
               </p>
               <p className="text-gray-600 mb-2">
-                <span className="font-medium">Ngày đặt:</span>{" "}
-                {new Date(booking.booking_date).toLocaleDateString("vi-VN")}
+                <span className="font-medium">Ngày đặt:</span> 22/05/2025
               </p>
               <p className="text-gray-600 mb-2">
                 <span className="font-medium">Thời gian:</span>{" "}
                 {new Date(booking.booking_date).toLocaleDateString("vi-VN")}
               </p>
-              {booking.tour_start_date && (
-                <p className="text-gray-600 mb-2">
-                  <span className="font-medium">Ngày khởi hành:</span>{" "}
-                  {new Date(booking.tour_start_date).toLocaleDateString(
-                    "vi-VN"
-                  )}
-                </p>
-              )}
               <p className="text-gray-600 mb-2">
                 <span className="font-medium">Số người:</span>{" "}
                 {booking.number_of_people}
